@@ -1,0 +1,7 @@
+einops
+numpy
+torch
+tqdm
+
+sae-lens
+transformer-lens>=2.0.0
