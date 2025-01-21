@@ -19,3 +19,16 @@ readme = "README.md"
 # mysql = [ "mysqlclient>=1.3,<2.0" ]
 # pgsql = [ "psycopg2>=2.9,<3.0" ]
 # databases = [ "mysqlclient>=1.3,<2.0", "psycopg2>=2.9,<3.0" ]
+
+[project.scripts]
+xc = "scripts.main:main"
+
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["crosscoders"]
