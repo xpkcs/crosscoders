@@ -20,17 +20,28 @@ class AcausalAutoencoder(AutoencoderABC, torch.nn.Module):
 
 
         # TODO: either init random (or other init options) or load pretrained weights
-        self.W_enc = torch.nn.Parameter(torch.nn.init.normal_(torch.empty((self.cfg.N_LAYERS, self.cfg.D_MODEL, self.cfg.D_CODER),
+        self.W_enc = torch.nn.Parameter(torch.nn.init.kaiming_uniform_(torch.empty
+            ((self.cfg.N_LAYERS, self.cfg.D_MODEL, self.cfg.D_CODER),
             **self.cfg.HARDWARE.asdict())))
 
-        self.b_enc = torch.nn.Parameter(torch.nn.init.normal_(torch.empty((self.cfg.D_CODER,),
+        self.b_enc = torch.nn.Parameter(torch.zeros(
+            (self.cfg.D_CODER,),
+            **self.cfg.HARDWARE.asdict()))
+
+        self.W_dec = torch.nn.Parameter(torch.nn.init.kaiming_uniform_(torch.empty
+            ((self.cfg.D_CODER, self.cfg.N_LAYERS, self.cfg.D_MODEL),
             **self.cfg.HARDWARE.asdict())))
 
-        self.W_dec = torch.nn.Parameter(torch.nn.init.normal_(torch.empty((self.cfg.D_CODER, self.cfg.N_LAYERS, self.cfg.D_MODEL),
-            **self.cfg.HARDWARE.asdict())))
+        self.W_dec.data = einops.rearrange(
+            self.W_enc.data.clone(),
+            'n_layers d_model d_coder -> d_coder n_layers d_model'
+        )
 
-        self.b_dec = torch.nn.Parameter(torch.nn.init.normal_(torch.empty((self.cfg.N_LAYERS, self.cfg.D_MODEL),
-            **self.cfg.HARDWARE.asdict())))
+        # self.W_dec.data = self.W_dec.data / self.W_dec.data.norm(dim=-1, keepdim=True) * 0.1
+
+        self.b_dec = torch.nn.Parameter(torch.zeros(
+            (self.cfg.N_LAYERS, self.cfg.D_MODEL),
+            **self.cfg.HARDWARE.asdict()))
 
 
     def _encode(self, x):
