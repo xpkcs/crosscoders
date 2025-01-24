@@ -26,9 +26,7 @@ from crosscoders.configs import AutoencoderLightningModuleConfig
 
 def train_loop_per_worker():
 
-    # cfg =
-
-    # Fetch the Dataset shards
+    # dataloader
     train_dl = ray.train.get_dataset_shard('train').iter_torch_batches(
         batch_size=CONSTANTS.BATCH_SIZE,
         collate_fn=lambda _: {k: torch.as_tensor(np.stack(v)) for k, v in _.items()}
@@ -84,9 +82,12 @@ def main():
 
     hf_dataset_name = 'roneneldan/TinyStories'
     hf_dataset = datasets.load_dataset(hf_dataset_name)
-    train_ds = ray.data.from_huggingface(hf_dataset['train'], concurrency=1).limit(10000)
+    train_ds = ray.data.from_huggingface(hf_dataset['train'], concurrency=1)
 
-    # train_ds = train_ds.map_batches(TokenToLatents, batch_size=10, concurrency=3, num_gpus=CONSTANTS.EXPERIMENT.NUM_GPUS_ACTIVATION - 0.01)
+    if CONSTANTS.EXPERIMENT.MAX_RECORDS:
+        train_ds = train_ds.limit(CONSTANTS.EXPERIMENT.MAX_RECORDS)
+
+
     train_ds = train_ds.map_batches(
         TokenToLatents,
         batch_size=CONSTANTS.BATCH_SIZE,

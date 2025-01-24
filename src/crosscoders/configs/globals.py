@@ -25,8 +25,9 @@ class ExperimentConfig:
     CONFIG_FILEPATH: str
     PROJECT_ROOT_DIR: str
 
+    MAX_RECORDS: Optional[int] = 1000
 
-    NUM_GPUS_ACTIVATION: float | int = 0.3
+    NUM_GPUS_ACTIVATION: float | int = 0.4
     NUM_GPUS: float | int = 1
     NUM_TRAINERS: int = 1
 
