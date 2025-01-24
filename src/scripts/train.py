@@ -7,9 +7,7 @@ import lightning as pl
 import ray, ray.train, ray.train.lightning
 from ray.train.torch import TorchTrainer
 from ray.runtime_env import RuntimeEnv
-from lightning.pytorch.callbacks.early_stopping import EarlyStopping
 
-import os
 import numpy as np
 import torch
 
@@ -89,7 +87,24 @@ def main():
     train_ds = ray.data.from_huggingface(hf_dataset['train'], concurrency=1).limit(10000)
 
     # train_ds = train_ds.map_batches(TokenToLatents, batch_size=10, concurrency=3, num_gpus=CONSTANTS.EXPERIMENT.NUM_GPUS_ACTIVATION - 0.01)
-    train_ds = train_ds.map_batches(TokenToLatents, batch_size=CONSTANTS.BATCH_SIZE, concurrency=1, num_gpus=.4)
+    train_ds = train_ds.map_batches(
+        TokenToLatents,
+        batch_size=CONSTANTS.BATCH_SIZE,
+        concurrency=1,
+        num_gpus=CONSTANTS.EXPERIMENT.NUM_GPUS_ACTIVATION - 0.01
+    )
+
+
+    # train_dl = train_ds \
+    #     .iter_torch_batches(
+    #         batch_size=20,
+    #         collate_fn=lambda _: {k: torch.as_tensor(np.stack(v)) for k, v in _.items()}
+    #     )
+    # for batch_idx, batch in enumerate(train_dl):
+    #     if batch_idx % 10 == 0:
+    #         print(batch_idx)
+
+    #     print(batch.keys())
 
 
     trainer = TorchTrainer(
