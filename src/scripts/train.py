@@ -76,15 +76,20 @@ def main():
 
     ray.init(
         runtime_env=RuntimeEnv(
-            env_vars={'CONFIG_FILEPATH': CONSTANTS.EXPERIMENT.CONFIG_FILEPATH}
+            env_vars={
+                'CONFIG_FILEPATH': CONSTANTS.EXPERIMENT.CONFIG_FILEPATH,
+                # 'RAY_DEBUG': '1'
+            },
+            # py_executable_args=["-Xfrozen_modules=off"]
         )
     )
 
     hf_dataset_name = 'roneneldan/TinyStories'
     hf_dataset = datasets.load_dataset(hf_dataset_name)
-    train_ds = ray.data.from_huggingface(hf_dataset['train'], concurrency=2).limit(10)
+    train_ds = ray.data.from_huggingface(hf_dataset['train'], concurrency=1).limit(10000)
 
-    train_ds = train_ds.map_batches(TokenToLatents, batch_size=5, concurrency=1, num_gpus=CONSTANTS.EXPERIMENT.NUM_GPUS_ACTIVATION)
+    # train_ds = train_ds.map_batches(TokenToLatents, batch_size=10, concurrency=3, num_gpus=CONSTANTS.EXPERIMENT.NUM_GPUS_ACTIVATION - 0.01)
+    train_ds = train_ds.map_batches(TokenToLatents, batch_size=CONSTANTS.BATCH_SIZE, concurrency=1, num_gpus=.4)
 
 
     trainer = TorchTrainer(
@@ -94,7 +99,8 @@ def main():
             num_workers=CONSTANTS.EXPERIMENT.NUM_TRAINERS,
             use_gpu=True,
             resources_per_worker={'GPU': 0.5}
-            # resources_per_worker={'GPU': (NUM_GPUS - ACTIVATION_GPU) / NUM_TRAINERS}
+            # resources_per_worker={'GPU': round((CONSTANTS.EXPERIMENT.NUM_GPUS - CONSTANTS.EXPERIMENT.NUM_GPUS_ACTIVATION) / CONSTANTS.EXPERIMENT.NUM_TRAINERS, 2)}
+            # resources_per_worker={'GPU': round((CONSTANTS.EXPERIMENT.NUM_GPUS - CONSTANTS.EXPERIMENT.NUM_GPUS_ACTIVATION - 0.01) / CONSTANTS.EXPERIMENT.NUM_TRAINERS, 2)}
         ),
         # run_config = RunConfig(
         #     checkpoint_config=CheckpointConfig(num_to_keep=1),
