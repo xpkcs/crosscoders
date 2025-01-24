@@ -26,6 +26,7 @@ class AcausalAutoencoderLightningModule(AutoencoderLightningModuleABC):
         self.loss: LossABC = AcausalLoss()
 
         self.n_tokens_processed: int = 0
+        self.n_seqs_processed: int = 0
 
 
     # def on_before_batch_transfer(self, batch, dataloader_idx):
@@ -37,7 +38,7 @@ class AcausalAutoencoderLightningModule(AutoencoderLightningModuleABC):
 
     def on_train_batch_start(self, batch: Dict, batch_idx: int):
 
-        if self.n_tokens_processed > CONSTANTS.MAX_TOKENS:
+        if type(CONSTANTS.MAX_TOKENS) == int and self.n_tokens_processed > CONSTANTS.MAX_TOKENS:
             return -1
 
 
@@ -45,6 +46,7 @@ class AcausalAutoencoderLightningModule(AutoencoderLightningModuleABC):
 
         # batch_size * seq_len
         self.n_tokens_processed += int(batch['resid_post'].shape[0] * batch['resid_post'].shape[1])
+        self.n_seqs_processed += batch['resid_post'].shape[0]
 
         # raise NotImplementedError({k: type(v) for k,v in batch.items()})
 
@@ -53,6 +55,7 @@ class AcausalAutoencoderLightningModule(AutoencoderLightningModuleABC):
 
         self.log('loss', loss, on_step=True, prog_bar=True)
         self.log('n_tokens_processed', self.n_tokens_processed, on_step=True, prog_bar=True)
+        self.log('n_seqs_processed', self.n_seqs_processed, on_step=True, prog_bar=True)
 
 
         return loss
