@@ -1,6 +1,7 @@
 
 
 from dataclasses import dataclass, asdict, field
+from typing import Optional
 import torch
 
 
@@ -25,19 +26,21 @@ class ExperimentConfig:
     PROJECT_ROOT_DIR: str
 
 
-    NUM_GPUS_ACTIVATION: float | int = 0.2
+    NUM_GPUS_ACTIVATION: float | int = 0.3
     NUM_GPUS: float | int = 1
     NUM_TRAINERS: int = 1
 
-    HARDWARE: HardwareConfig = field(default_factory=HardwareConfig)
+    HARDWARE: Optional[HardwareConfig] = field(default_factory=HardwareConfig)
 
 
 @dataclass
 class GlobalsConfig:
 
+    EXPERIMENT: ExperimentConfig
+
     BATCH_SIZE: int
     MAX_EPOCHS: int
-    MAX_TOKENS: int
+    MAX_TOKENS: Optional[int] = None
 
-    EXPERIMENT: ExperimentConfig
+
 
