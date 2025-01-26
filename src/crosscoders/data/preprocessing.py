@@ -29,6 +29,8 @@ class TokenToLatents:
         # self.latent_names = ('attn_out', 'resid_mid', 'mlp_out', 'resid_post')
         self.latent_names = ('resid_post',)
 
+        torch.set_grad_enabled(False)
+
 
     def __call__(self, batch: Dict[str, np.ndarray]) -> Dict[str, np.ndarray]:
 
@@ -42,11 +44,12 @@ class TokenToLatents:
 
         # get latents/activations
 
-        # _ = self.model(batch['tokens'])
-        _ = self.model.run_with_hooks(
-            batch['tokens'],
-            fwd_hooks=self.layer_hooks
-        )
+        with torch.inference_mode():
+            # _ = self.model(batch['tokens'])
+            _ = self.model.run_with_hooks(
+                batch['tokens'],
+                fwd_hooks=self.layer_hooks
+            )
 
         batch |= {k: v.permute(1, 2, 0, 3).cpu().numpy().astype(np.float32) for k, v in self.latents.items()}
 

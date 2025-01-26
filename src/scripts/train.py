@@ -80,21 +80,6 @@ def main():
         )
     )
 
-    hf_dataset_name = 'roneneldan/TinyStories'
-    hf_dataset = datasets.load_dataset(hf_dataset_name)
-    train_ds = ray.data.from_huggingface(hf_dataset['train'], concurrency=1)
-
-    if CONSTANTS.EXPERIMENT.MAX_RECORDS:
-        train_ds = train_ds.limit(CONSTANTS.EXPERIMENT.MAX_RECORDS)
-
-
-    train_ds = train_ds.map_batches(
-        TokenToLatents,
-        batch_size=CONSTANTS.BATCH_SIZE,
-        concurrency=1,
-        num_gpus=CONSTANTS.EXPERIMENT.NUM_GPUS_ACTIVATION - 0.01
-    )
-
 
     # train_dl = train_ds \
     #     .iter_torch_batches(
