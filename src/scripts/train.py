@@ -80,6 +80,10 @@ def main():
         )
     )
 
+    hf_dataset_name = 'roneneldan/TinyStories'
+    hf_dataset = datasets.load_dataset(hf_dataset_name)
+    train_ds = ray.data.from_huggingface(hf_dataset['train'], concurrency=1)
+
 
     # train_dl = train_ds \
     #     .iter_torch_batches(
