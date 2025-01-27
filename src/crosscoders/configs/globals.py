@@ -22,8 +22,10 @@ class ExperimentConfig:
 
     # mode: Literal['train', 'inference']
 
-    CONFIG_FILEPATH: str
-    PROJECT_ROOT_DIR: str
+
+    BATCH_SIZE: int
+    MAX_EPOCHS: int
+    MAX_TOKENS: Optional[int] = None
 
     MAX_RECORDS: Optional[int] = 1000
 
@@ -37,11 +39,10 @@ class ExperimentConfig:
 @dataclass
 class GlobalsConfig:
 
-    EXPERIMENT: ExperimentConfig
+    CONFIG_FILEPATH: str
+    PROJECT_ROOT_DIR: str
 
-    BATCH_SIZE: int
-    MAX_EPOCHS: int
-    MAX_TOKENS: Optional[int] = None
+    EXPERIMENT: ExperimentConfig = field(default_factory=ExperimentConfig())
 
 
 

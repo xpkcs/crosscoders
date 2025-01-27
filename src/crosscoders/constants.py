@@ -28,10 +28,8 @@ def load_constants():
 
     try:
         cfg = get_config(resolve_path(os.environ['CONFIG_FILEPATH']))
-        cfg['experiment']['EXPERIMENT'] = cfg['experiment'].get('EXPERIMENT', {})
-        cfg['experiment']['EXPERIMENT'] |= {
-            'PROJECT_ROOT_DIR': resolve_path(os.environ['PROJECT_ROOT_DIR']),
-            'CONFIG_FILEPATH': resolve_path(os.environ['CONFIG_FILEPATH'])
+        cfg['experiment'] |= {
+            'CONFIG_FILEPATH': resolve_path(os.environ['CONFIG_FILEPATH']),
         }
 
     except KeyError as e:

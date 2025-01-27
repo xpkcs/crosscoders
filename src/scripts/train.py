@@ -28,13 +28,13 @@ def train_loop_per_worker():
 
     # dataloader
     train_dl = ray.train.get_dataset_shard('train').iter_torch_batches(
-        batch_size=CONSTANTS.BATCH_SIZE,
+        batch_size=CONSTANTS.EXPERIMENT.BATCH_SIZE,
         collate_fn=lambda _: {k: torch.as_tensor(np.stack(v)) for k, v in _.items()}
     )
-    # valid_dl = ray.train.get_dataset_shard('valid').iter_torch_batches(batch_size=cfg.BATCH_SIZE)
+    # valid_dl = ray.train.get_dataset_shard('valid').iter_torch_batches(batch_size=cfg.EXPERIMENT.BATCH_SIZE)
 
-    # train_dl = train_ds.iter_torch_batches(batch_size=cfg.BATCH_SIZE)
-    # val_dl = val_ds.iter_torch_batches(batch_size=cfg.BATCH_SIZE)
+    # train_dl = train_ds.iter_torch_batches(batch_size=cfg.EXPERIMENT.BATCH_SIZE)
+    # val_dl = val_ds.iter_torch_batches(batch_size=cfg.EXPERIMENT.BATCH_SIZE)
 
 
     model = AcausalAutoencoderLightningModule(
@@ -46,7 +46,7 @@ def train_loop_per_worker():
 
     trainer = pl.Trainer(
         # max_epochs=10,
-        max_epochs=CONSTANTS.MAX_EPOCHS,
+        max_epochs=CONSTANTS.EXPERIMENT.MAX_EPOCHS,
         devices='auto',
         accelerator='gpu',
         strategy=ray.train.lightning.RayDDPStrategy(),
@@ -73,7 +73,7 @@ def main():
     ray.init(
         runtime_env=RuntimeEnv(
             env_vars={
-                'CONFIG_FILEPATH': CONSTANTS.EXPERIMENT.CONFIG_FILEPATH,
+                'CONFIG_FILEPATH': CONSTANTS.CONFIG_FILEPATH,
                 # 'RAY_DEBUG': '1'
             },
             # py_executable_args=["-Xfrozen_modules=off"]

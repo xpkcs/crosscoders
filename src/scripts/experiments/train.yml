@@ -1,11 +1,15 @@
 
 
 
+GLOBALS:
 
-experiment:
+  CONFIG_FILEPATH: /home/yandy/repos/crosscoders/src/scripts/experiments/train.yml
+  PROJECT_ROOT_DIR: /home/yandy/repos/crosscoders
 
-  BATCH_SIZE: 5
-  MAX_EPOCHS: 1
-  # MAX_TOKENS: 100000
+  EXPERIMENT:
 
-  MAX_RECORDS: 1000
+    BATCH_SIZE: 5
+    MAX_EPOCHS: 1
+    # MAX_TOKENS: 100000
+
+    MAX_RECORDS: 1000

@@ -38,7 +38,7 @@ class AcausalAutoencoderLightningModule(AutoencoderLightningModuleABC):
 
     def on_train_batch_start(self, batch: Dict, batch_idx: int):
 
-        if type(CONSTANTS.MAX_TOKENS) == int and self.n_tokens_processed > CONSTANTS.MAX_TOKENS:
+        if type(CONSTANTS.EXPERIMENT.MAX_TOKENS) == int and self.n_tokens_processed > CONSTANTS.EXPERIMENT.MAX_TOKENS:
             return -1
 
 
