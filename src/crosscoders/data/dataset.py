@@ -7,10 +7,6 @@ from crosscoders.constants import CONSTANTS
 from crosscoders.data.preprocessing import TokenToLatents
 
 
-<<<<<<< HEAD
-=======
-class TinyStoriesRayDataset:
->>>>>>> 3ffe76b... changed constants structure a bit
 
 
 class TinyStoriesRayDataset:
