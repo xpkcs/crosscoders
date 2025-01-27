@@ -28,7 +28,7 @@ def load_constants():
 
     try:
         cfg = get_config(resolve_path(os.environ['CONFIG_FILEPATH']))
-        cfg['experiment'] |= {
+        cfg['GLOBALS'] |= {
             'CONFIG_FILEPATH': resolve_path(os.environ['CONFIG_FILEPATH']),
         }
 
@@ -42,7 +42,7 @@ def load_constants():
     # print(CONSTANTS)
 
 
-    CONSTANTS = from_dict(GlobalsConfig, cfg['experiment'])
+    CONSTANTS = from_dict(GlobalsConfig, cfg['GLOBALS'])
 
     print()
     print(' '.join(['-'* 25, 'CONSTANTS', '-' * 25]))

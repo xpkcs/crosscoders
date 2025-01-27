@@ -24,7 +24,7 @@ class ExperimentConfig:
 
 
     BATCH_SIZE: int
-    MAX_EPOCHS: int
+    MAX_EPOCHS: int = 1
     MAX_TOKENS: Optional[int] = None
 
     MAX_RECORDS: Optional[int] = 1000
@@ -41,8 +41,9 @@ class GlobalsConfig:
 
     CONFIG_FILEPATH: str
     PROJECT_ROOT_DIR: str
+    DATA_DIR: str
 
-    EXPERIMENT: ExperimentConfig = field(default_factory=ExperimentConfig())
+    EXPERIMENT: ExperimentConfig = field(default_factory=ExperimentConfig)
 
 
 
