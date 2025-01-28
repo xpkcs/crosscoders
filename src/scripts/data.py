@@ -6,19 +6,14 @@
 
 
 
-from crosscoders.data.dataset import RayDataset
+from crosscoders.data.dataset import TinyStoriesRayDataset
 from crosscoders import CONSTANTS
 
 
 def main():
 
-
-
-    ds = RayDataset.load()
-
-
-
-
+    ds = TinyStoriesRayDataset()
+    ds.save(ds.load())
 
 
 

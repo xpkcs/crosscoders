@@ -29,7 +29,7 @@ from pathlib import Path
 #               default=Path(__file__).resolve().parent / 'experiments' / 'train.yml',
 #               help='File path to experiment config.')
 @click.argument('mode',
-                type=click.Choice(['train', 'inference']),
+                type=click.Choice(['data', 'train', 'inference']),
                 default='inference')
 def main(**kwargs: dict) -> None:
     '''
@@ -47,8 +47,11 @@ def main(**kwargs: dict) -> None:
     # xc.configs.utils.update_dataclass(CONSTANTS, cfg)
 
 
-    from scripts import train   # , inference
+    from scripts import data, train   # , inference
     match kwargs['mode']:
+        case 'data':
+            data.main()
+
         case 'train':
             train.main()
 
