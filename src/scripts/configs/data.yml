@@ -1,0 +1,17 @@
+
+
+
+GLOBALS:
+
+  PROJECT_ROOT_DIR: ~/repos/crosscoders
+  CONFIG_FILEPATH:
+  DATA_DIR: ~/repos/crosscoders/data
+
+
+  EXPERIMENT:
+
+    BATCH_SIZE: 32
+
+    MAX_RECORDS: 1
+
+    NUM_GPUS_ACTIVATION: 1.01

@@ -20,6 +20,7 @@ from crosscoders.autoencoders.acausal import AcausalAutoencoderLightningModule
 
 from crosscoders import CONSTANTS
 from crosscoders.configs import AutoencoderLightningModuleConfig
+from crosscoders.data.dataset import TinyStoriesRayDataset
 
 
 
@@ -82,10 +83,11 @@ def main():
         )
     )
 
-    hf_dataset_name = 'roneneldan/TinyStories'
-    hf_dataset = datasets.load_dataset(hf_dataset_name)
-    train_ds = ray.data.from_huggingface(hf_dataset['train'], concurrency=1)
+    # hf_dataset_name = 'roneneldan/TinyStories'
+    # hf_dataset = datasets.load_dataset(hf_dataset_name)
+    # train_ds = ray.data.from_huggingface(hf_dataset['train'], concurrency=1)
 
+    train_ds = TinyStoriesRayDataset()
 
     # train_dl = train_ds \
     #     .iter_torch_batches(
@@ -123,5 +125,5 @@ def main():
 
 
 
-if __name__ == '__main__':
-    main()
+# if __name__ == '__main__':
+#     main()
