@@ -7,7 +7,7 @@
 
 
 from crosscoders.data.dataset import TinyStoriesRayDataset
-from crosscoders import CONSTANTS
+# from crosscoders import CONSTANTS
 
 
 def main():
