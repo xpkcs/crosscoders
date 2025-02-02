@@ -25,6 +25,13 @@ from crosscoders.data.dataset import TinyStoriesRayDataset
 
 
 
+# def collate_fn(batch):
+#     batch_ = {}
+#     for k, v in batch.items():
+#         b, l, d = v.shape[0], max(_.shape[0] for _ in v), v[0].shape[1]
+#         batch_[k] = torch.as_tensor(np.stack([np.pad(_, ((0, b), (0, l), (0, d))) for _ in v]))
+
+#     return batch_
 
 
 def train_loop_per_worker():
@@ -32,7 +39,9 @@ def train_loop_per_worker():
     # dataloader
     train_dl = ray.train.get_dataset_shard('train').iter_torch_batches(
         batch_size=CONSTANTS.EXPERIMENT.BATCH_SIZE,
-        collate_fn=lambda _: {k: torch.as_tensor(np.stack(v)) for k, v in _.items()}
+        collate_fn=lambda _: {k: torch.as_tensor(np.stack(v)) for k, v in _.items()},
+        # collate_fn=lambda _: {k: torch.as_tensor(np.stack([np.pad(_, ()) for _ in v])) for k, v in _.items()},
+        # local_shuffle_buffer_size=16
     )
     # valid_dl = ray.train.get_dataset_shard('valid').iter_torch_batches(batch_size=cfg.EXPERIMENT.BATCH_SIZE)
 
@@ -87,7 +96,7 @@ def main():
     # hf_dataset = datasets.load_dataset(hf_dataset_name)
     # train_ds = ray.data.from_huggingface(hf_dataset['train'], concurrency=1)
 
-    train_ds = TinyStoriesRayDataset()
+    train_ds = TinyStoriesRayDataset().load()
 
     # train_dl = train_ds \
     #     .iter_torch_batches(
@@ -107,7 +116,7 @@ def main():
         scaling_config=ray.train.ScalingConfig(
             num_workers=CONSTANTS.EXPERIMENT.NUM_TRAINERS,
             use_gpu=True,
-            resources_per_worker={'GPU': 0.5}
+            resources_per_worker={'CPU': 0.5, 'GPU': 0.5}
             # resources_per_worker={'GPU': round((CONSTANTS.EXPERIMENT.NUM_GPUS - CONSTANTS.EXPERIMENT.NUM_GPUS_ACTIVATION) / CONSTANTS.EXPERIMENT.NUM_TRAINERS, 2)}
             # resources_per_worker={'GPU': round((CONSTANTS.EXPERIMENT.NUM_GPUS - CONSTANTS.EXPERIMENT.NUM_GPUS_ACTIVATION - 0.01) / CONSTANTS.EXPERIMENT.NUM_TRAINERS, 2)}
         ),
