@@ -3,6 +3,10 @@
 
 
 import click
+import ray
+
+from crosscoders.constants import CONSTANTS
+from ray.runtime_env import RuntimeEnv
 
 
 # @dataclass
@@ -43,6 +47,17 @@ def main(**kwargs: dict) -> None:
     # print(cfg)
 
     # xc.configs.utils.update_dataclass(CONSTANTS, cfg)
+
+
+    ray.init(
+        runtime_env=RuntimeEnv(
+            env_vars={
+                'CONFIG_FILEPATH': CONSTANTS.CONFIG_FILEPATH,
+                # 'RAY_DEBUG': '1'
+            },
+            # py_executable_args=["-Xfrozen_modules=off"]
+        )
+    )
 
 
     from scripts import data, train   # , inference

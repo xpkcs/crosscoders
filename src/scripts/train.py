@@ -82,16 +82,6 @@ def train_loop_per_worker():
 
 def main():
 
-    ray.init(
-        runtime_env=RuntimeEnv(
-            env_vars={
-                'CONFIG_FILEPATH': CONSTANTS.CONFIG_FILEPATH,
-                # 'RAY_DEBUG': '1'
-            },
-            # py_executable_args=["-Xfrozen_modules=off"]
-        )
-    )
-
     # hf_dataset_name = 'roneneldan/TinyStories'
     # hf_dataset = datasets.load_dataset(hf_dataset_name)
     # train_ds = ray.data.from_huggingface(hf_dataset['train'], concurrency=1)
