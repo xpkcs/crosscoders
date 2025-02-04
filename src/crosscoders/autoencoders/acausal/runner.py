@@ -2,9 +2,9 @@
 
 
 
-from typing import Dict
+from typing import Dict, Optional
 import torch
-from crosscoders.abc import LossABC, AutoencoderLightningModuleABC
+from crosscoders.abc import AutoencoderLightningModuleABC
 from crosscoders.autoencoders.acausal.loss import AcausalLoss
 from crosscoders.configs import AutoencoderLightningModuleConfig
 from crosscoders.autoencoders.acausal import AcausalAutoencoder
@@ -16,14 +16,13 @@ from crosscoders import CONSTANTS
 
 class AcausalAutoencoderLightningModule(AutoencoderLightningModuleABC):
 
-    def __init__(self, cfg: AutoencoderLightningModuleConfig):
+    def __init__(self, cfg: AutoencoderLightningModuleConfig) -> None:
 
         super().__init__(cfg)
 
         self.model = AcausalAutoencoder(self.cfg.model)
 
-        # self.loss = None  # TODO
-        self.loss: LossABC = AcausalLoss()
+        self.loss = AcausalLoss()
 
         self.n_tokens_processed: int = 0
         self.n_seqs_processed: int = 0
@@ -36,13 +35,13 @@ class AcausalAutoencoderLightningModule(AutoencoderLightningModuleABC):
     #     return batch
 
 
-    def on_train_batch_start(self, batch: Dict, batch_idx: int):
+    def on_train_batch_start(self, batch: Dict[str, torch.Tensor], batch_idx: int) -> Optional[int]:
 
-        if type(CONSTANTS.EXPERIMENT.MAX_TOKENS) == int and self.n_tokens_processed > CONSTANTS.EXPERIMENT.MAX_TOKENS:
+        if type(CONSTANTS.EXPERIMENT.MAX_TOKENS) is int and self.n_tokens_processed > CONSTANTS.EXPERIMENT.MAX_TOKENS:
             return -1
 
 
-    def training_step(self, batch: Dict[str, torch.Tensor]):
+    def training_step(self, batch: Dict[str, torch.Tensor]) -> torch.Tensor:
 
         # batch_size * seq_len
         self.n_tokens_processed += int(batch['resid_post'].shape[0] * batch['resid_post'].shape[1])
@@ -50,12 +49,14 @@ class AcausalAutoencoderLightningModule(AutoencoderLightningModuleABC):
 
         # raise NotImplementedError({k: type(v) for k,v in batch.items()})
 
-        reconstruction_error, regularization_penalty_l1, regularization_penalty_l0 = self.loss(batch['resid_post'], self(batch['resid_post']))
-        loss = reconstruction_error + regularization_penalty_l1
+        loss_metrics = self.loss(batch['resid_post'], self(batch['resid_post']))
 
-        self.log('loss', loss, on_step=True, prog_bar=True)
+        self.log('loss', loss_metrics.loss, on_step=True, prog_bar=True)
+        self.log('error', loss_metrics.reconstruction_error, on_step=True, prog_bar=True)
+        self.log('l1', loss_metrics.regularization_penalty_l1, on_step=True, prog_bar=True)
+        self.log('l0', loss_metrics.regularization_penalty_l0, on_step=True, prog_bar=True)
         self.log('n_tokens_processed', self.n_tokens_processed, on_step=True, prog_bar=True)
         self.log('n_seqs_processed', self.n_seqs_processed, on_step=True, prog_bar=True)
 
 
-        return loss
+        return loss_metrics.loss

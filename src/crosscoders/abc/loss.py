@@ -3,6 +3,7 @@
 
 
 from abc import abstractmethod
+from crosscoders.configs.loss import LossMetrics
 
 
 import torch
@@ -16,6 +17,5 @@ class LossABC:
     #     ...
 
     @abstractmethod
-    # def __call__(self, target: torch.Tensor[DTYPE], predicted: torch.Tensor[DTYPE]):
-    def __call__(self, target: torch.Tensor, predicted: torch.Tensor):
+    def __call__(self, target: torch.Tensor, predicted: torch.Tensor, **kwargs: dict) -> LossMetrics:
         ...
