@@ -6,12 +6,17 @@ from abc import abstractmethod
 import lightning as pl
 
 
+from crosscoders.abc import AutoencoderABC, LossABC
 from crosscoders.configs import AutoencoderLightningModuleConfig
 
 
 
 
 class AutoencoderLightningModuleABC(pl.LightningModule):
+
+    model: AutoencoderABC
+    loss: LossABC
+
 
     def __init__(self, cfg: AutoencoderLightningModuleConfig):
 
@@ -20,16 +25,16 @@ class AutoencoderLightningModuleABC(pl.LightningModule):
         self.cfg = cfg
 
 
-    @property
-    @abstractmethod
-    def model(self):
-        ...
+    # @property
+    # @abstractmethod
+    # def model(self):
+    #     ...
 
 
-    @property
-    @abstractmethod
-    def loss(self):
-        ...
+    # @property
+    # @abstractmethod
+    # def loss(self):
+    #     ...
 
 
     # def configure_model(self):
@@ -47,7 +52,7 @@ class AutoencoderLightningModuleABC(pl.LightningModule):
 
         return self.cfg.OPTIMIZER.optimizer(
             self.model.parameters(),
-            **self.cfg.OPTIMIZER.parameters._asdict()
+            **self.cfg.OPTIMIZER.parameters.asdict()
         )
 
 
