@@ -7,11 +7,13 @@ from dataclasses import dataclass
 
 import torch
 
+from crosscoders.abc import DataclassABC
 
 
 
-@dataclass
-class LossMetrics:
+
+@dataclass(repr=False)
+class LossMetrics(DataclassABC):
 
     loss: torch.Tensor       # only required output to run backward()
 

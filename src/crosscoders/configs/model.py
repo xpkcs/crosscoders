@@ -7,12 +7,13 @@ from typing import Any, Callable, List, Literal, NamedTuple, Optional, Tuple, Ty
 
 
 from crosscoders.configs import HardwareConfig
+from crosscoders.abc import DataclassABC
 
 
 
 
-@dataclass
-class ModelConfig:
+@dataclass(repr=False)
+class ModelConfig(DataclassABC):
 
     CAUSALITY: Literal['acausal', 'weak', 'strict']
     LOCALITY: Literal['global', 'local', 'skip'] = 'global'

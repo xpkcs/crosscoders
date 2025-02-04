@@ -4,21 +4,19 @@ from dataclasses import dataclass, asdict, field
 from typing import Optional
 import torch
 
+from crosscoders.abc import DataclassABC
 
 
-@dataclass
-class HardwareConfig:
+
+@dataclass(repr=False)
+class HardwareConfig(DataclassABC):
 
     dtype: str | torch.dtype = torch.float32
     device: str | torch.device = 'cuda'
 
-    def asdict(self):
 
-        return asdict(self)
-
-
-@dataclass
-class ExperimentConfig:
+@dataclass(repr=False)
+class ExperimentConfig(DataclassABC):
 
     # mode: Literal['train', 'inference']
 
@@ -36,8 +34,8 @@ class ExperimentConfig:
     HARDWARE: Optional[HardwareConfig] = field(default_factory=HardwareConfig)
 
 
-@dataclass
-class GlobalsConfig:
+@dataclass(repr=False)
+class GlobalsConfig(DataclassABC):
 
     CONFIG_FILEPATH: str
     PROJECT_ROOT_DIR: str
