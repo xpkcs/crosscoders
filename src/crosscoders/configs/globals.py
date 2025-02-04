@@ -25,7 +25,7 @@ class ExperimentConfig(DataclassABC):
     MAX_EPOCHS: int = 1
     MAX_TOKENS: Optional[int] = None
 
-    MAX_RECORDS: Optional[int] = 1000
+    MAX_RECORDS: Optional[int] = None
 
     NUM_GPUS_ACTIVATION: float | int = 0.4
     NUM_GPUS: float | int = 1
