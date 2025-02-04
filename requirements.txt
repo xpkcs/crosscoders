@@ -1,7 +1,7 @@
 einops
 lightning
 numpy
-ray[data,train,tune]
+ray[default,data,train,tune]
 torch
 tqdm
 

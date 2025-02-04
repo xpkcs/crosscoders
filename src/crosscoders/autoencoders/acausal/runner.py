@@ -49,7 +49,7 @@ class AcausalAutoencoderLightningModule(AutoencoderLightningModuleABC):
 
         # raise NotImplementedError({k: type(v) for k,v in batch.items()})
 
-        loss_metrics = self.loss(batch['resid_post'], self(batch['resid_post']))
+        loss_metrics = self.loss(batch['resid_post'], self(batch['resid_post']), W_dec=self.model.W_dec, x_enc=self.model.x_enc)
 
         self.log('loss', loss_metrics.loss, on_step=True, prog_bar=True)
         self.log('error', loss_metrics.reconstruction_error, on_step=True, prog_bar=True)

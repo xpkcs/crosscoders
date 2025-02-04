@@ -6,7 +6,7 @@ import torch
 import einops
 
 
-from crosscoders.abc import LossABC, AutoencoderABC
+from crosscoders.abc import AutoencoderABC
 from crosscoders.configs import ModelConfig
 
 
@@ -52,6 +52,7 @@ class AcausalAutoencoder(AutoencoderABC, torch.nn.Module):
         ) + self.b_enc
 
         x_enc = torch.nn.functional.relu(x_enc)
+        self.x_enc = x_enc      # save memory costs using hooked model?
 
         return x_enc
 
@@ -64,11 +65,11 @@ class AcausalAutoencoder(AutoencoderABC, torch.nn.Module):
         ) + self.b_dec
 
         return x_dec
-    
 
-    def forward(self, x):
 
-        x = super().forward(x)
-        x = torch.nn.functional.relu(x)
+    # def forward(self, x):
 
-        return x
+    #     x = super().forward(x)
+    #     x = torch.nn.functional.relu(x)
+
+    #     return x

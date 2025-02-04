@@ -14,7 +14,11 @@ class AcausalLoss(LossABC):
 
     def __call__(self, target: torch.Tensor, predicted: torch.Tensor, **kwargs: dict) -> LossMetrics:
 
-        per_layer_l2_norm = torch.norm(target - predicted, dim=-1)
+        per_layer_l2_norm = einops.reduce(
+            (target - predicted).pow(2),
+            '... n_layers d_model -> ... n_layers',
+            'sum'
+        )
         reconstruction_error = einops.reduce(
             per_layer_l2_norm,
             '... n_layers -> ...',
