@@ -7,7 +7,8 @@ import os
 
 from dotenv import load_dotenv;     load_dotenv()
 
-from crosscoders.configs.utils import from_dict, update_dataclass
+from crosscoders.configs.runner import AutoencoderLightningModuleConfig
+from crosscoders.utils import from_dict, update_dataclass
 
 
 
@@ -23,7 +24,7 @@ def load_constants():
 
     # load global config object
     from crosscoders.configs.globals import GlobalsConfig
-    from crosscoders.configs.utils import get_config
+    from crosscoders.utils import get_config
 
 
     try:
@@ -42,7 +43,8 @@ def load_constants():
     # print(CONSTANTS)
 
 
-    CONSTANTS = from_dict(GlobalsConfig, cfg['GLOBALS'])
+    CONSTANTS = from_dict(GlobalsConfig, cfg.get('GLOBALS', {}))
+    # cfg = from_dict(AutoencoderLightningModuleConfig, cfg.get('RUNNER', {}))
 
     print()
     print(' '.join(['-'* 25, 'CONSTANTS', '-' * 25]))

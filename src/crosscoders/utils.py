@@ -86,3 +86,21 @@ def from_dict(data_class: Type[T], data: Dict[str, Any]) -> T:
         #     init_kwargs[field_name] = None  # or set a default if needed
 
     return data_class(**init_kwargs)
+
+
+
+from dataclasses import dataclass, is_dataclass, fields
+
+def dataclass_repr(dc, indent=0):
+    """Recursively produce a multi-line repr for dataclass instances."""
+    if not is_dataclass(dc):
+        return repr(dc)
+    spacer = ' ' * indent
+    lines = [f"{spacer}{dc.__class__.__name__}("]
+    for f in fields(dc):
+        value = getattr(dc, f.name)
+        # Recursively format nested dataclasses.
+        value_repr = dataclass_repr(value, indent + 4) if is_dataclass(value) else repr(value)
+        lines.append(f"{spacer}    {f.name} = {value_repr.lstrip()},")
+    lines.append(f"{spacer})")
+    return "\n".join(lines)
