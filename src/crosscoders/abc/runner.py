@@ -2,6 +2,7 @@
 
 
 
+from abc import abstractmethod
 import lightning as pl
 
 
@@ -19,6 +20,18 @@ class AutoencoderLightningModuleABC(pl.LightningModule):
         self.cfg = cfg
 
 
+    @property
+    @abstractmethod
+    def model(self):
+        ...
+
+
+    @property
+    @abstractmethod
+    def loss(self):
+        ...
+
+
     # def configure_model(self):
 
     #     match self.cfg.model.causality:
@@ -32,9 +45,9 @@ class AutoencoderLightningModuleABC(pl.LightningModule):
 
     def configure_optimizers(self):
 
-        return self.cfg.optimizer.optimizer(
+        return self.cfg.OPTIMIZER.optimizer(
             self.model.parameters(),
-            **self.cfg.optimizer.parameters._asdict()
+            **self.cfg.OPTIMIZER.parameters._asdict()
         )
 
 
@@ -43,6 +56,6 @@ class AutoencoderLightningModuleABC(pl.LightningModule):
         return self.model(batch)
 
 
-    def training_step(self, batch):
+    # def training_step(self, batch):
 
-        return self.loss(batch, self(batch))
+    #     return self.loss(batch, self(batch))

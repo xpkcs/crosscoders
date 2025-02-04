@@ -2,6 +2,7 @@
 
 
 
+from functools import cached_property
 from typing import Dict, Optional
 import torch
 from crosscoders.abc import AutoencoderLightningModuleABC
@@ -20,12 +21,26 @@ class AcausalAutoencoderLightningModule(AutoencoderLightningModuleABC):
 
         super().__init__(cfg)
 
-        self.model = AcausalAutoencoder(self.cfg.model)
+        # self.model = AcausalAutoencoder(self.cfg.MODEL)
 
-        self.loss = AcausalLoss()
+        # self.loss = AcausalLoss()
 
         self.n_tokens_processed: int = 0
         self.n_seqs_processed: int = 0
+
+
+    @cached_property
+    def model(self) -> AcausalAutoencoder:
+
+        return AcausalAutoencoder(self.cfg.MODEL)
+    
+    
+    @cached_property
+    def loss(self) -> AcausalLoss:
+
+        return AcausalLoss()
+    
+
 
 
     # def on_before_batch_transfer(self, batch, dataloader_idx):
