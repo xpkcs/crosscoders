@@ -39,7 +39,7 @@ def train_loop_per_worker():
     # dataloader
     train_dl = ray.train.get_dataset_shard('train').iter_torch_batches(
         batch_size=CONSTANTS.EXPERIMENT.BATCH_SIZE,
-        collate_fn=lambda _: {k: torch.as_tensor(np.stack(v)) for k, v in _.items()},
+        # collate_fn=lambda _: {k: torch.as_tensor(np.stack(v)) for k, v in _.items()},
         # collate_fn=lambda _: {k: torch.as_tensor(np.stack([np.pad(_, ()) for _ in v])) for k, v in _.items()},
         # local_shuffle_buffer_size=16
     )
@@ -60,7 +60,7 @@ def train_loop_per_worker():
         # max_epochs=10,
         max_epochs=CONSTANTS.EXPERIMENT.MAX_EPOCHS,
         devices='auto',
-        accelerator='gpu',
+        accelerator='auto',
         strategy=ray.train.lightning.RayDDPStrategy(),
         plugins=[ray.train.lightning.RayLightningEnvironment()],
         callbacks=[
@@ -70,6 +70,8 @@ def train_loop_per_worker():
         # [1a] Optionally, disable the default checkpointing behavior
         # in favor of the `RayTrainReportCallback` above.
         enable_checkpointing=False,
+        gradient_clip_val=0.5,
+        log_every_n_steps=10,
     )
 
     trainer = ray.train.lightning.prepare_trainer(trainer)
@@ -86,7 +88,9 @@ def main():
     # hf_dataset = datasets.load_dataset(hf_dataset_name)
     # train_ds = ray.data.from_huggingface(hf_dataset['train'], concurrency=1)
 
-    train_ds = TinyStoriesRayDataset().load()
+    train_ds = TinyStoriesRayDataset().load('activations')
+
+    print(train_ds)
 
     # train_dl = train_ds \
     #     .iter_torch_batches(
@@ -106,7 +110,7 @@ def main():
         scaling_config=ray.train.ScalingConfig(
             num_workers=CONSTANTS.EXPERIMENT.NUM_TRAINERS,
             use_gpu=True,
-            resources_per_worker={'CPU': 0.5, 'GPU': 0.5}
+            resources_per_worker={'CPU': 2, 'GPU': 1}
             # resources_per_worker={'GPU': round((CONSTANTS.EXPERIMENT.NUM_GPUS - CONSTANTS.EXPERIMENT.NUM_GPUS_ACTIVATION) / CONSTANTS.EXPERIMENT.NUM_TRAINERS, 2)}
             # resources_per_worker={'GPU': round((CONSTANTS.EXPERIMENT.NUM_GPUS - CONSTANTS.EXPERIMENT.NUM_GPUS_ACTIVATION - 0.01) / CONSTANTS.EXPERIMENT.NUM_TRAINERS, 2)}
         ),

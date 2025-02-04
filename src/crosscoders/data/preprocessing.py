@@ -51,7 +51,7 @@ class TokenToLatents:
                 fwd_hooks=self.layer_hooks
             )
 
-        batch |= {k: v.permute(1, 2, 0, 3).cpu().numpy().astype(np.float32) for k, v in self.latents.items()}
+        batch |= {k: v.permute(1, 2, 0, 3).flatten(start_dim=0, end_dim=1).cpu().numpy().astype(np.float32) for k, v in self.latents.items()}
 
         self._delete_tensors()
 
