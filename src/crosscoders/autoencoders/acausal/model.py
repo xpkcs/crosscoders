@@ -35,7 +35,7 @@ class AcausalAutoencoder(AutoencoderABC, torch.nn.Module):
         self.W_dec.data = einops.rearrange(
             self.W_enc.data.clone(),
             'n_layers d_model d_coder -> d_coder n_layers d_model'
-        )
+        ).contiguous()
 
         # self.W_dec.data = self.W_dec.data / self.W_dec.data.norm(dim=-1, keepdim=True) * 0.1
 

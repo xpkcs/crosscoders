@@ -70,7 +70,8 @@ def train_loop_per_worker():
         max_epochs=CONSTANTS.EXPERIMENT.MAX_EPOCHS,
         devices='auto',
         accelerator='auto',
-        strategy=ray.train.lightning.RayDDPStrategy(),
+        # strategy=ray.train.lightning.RayDDPStrategy(),
+        strategy=ray.train.lightning.RayDeepSpeedStrategy(),
         plugins=[ray.train.lightning.RayLightningEnvironment()],
         callbacks=[
             ray.train.lightning.RayTrainReportCallback(),
