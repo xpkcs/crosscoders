@@ -21,6 +21,7 @@ from crosscoders.autoencoders.acausal import AcausalAutoencoderLightningModule
 from crosscoders import CONSTANTS
 from crosscoders.configs import AutoencoderLightningModuleConfig
 from crosscoders.data.dataset import TinyStoriesRayDataset
+from crosscoders.utils import from_dict, get_config
 
 
 
@@ -49,11 +50,19 @@ def train_loop_per_worker():
     # val_dl = val_ds.iter_torch_batches(batch_size=cfg.EXPERIMENT.BATCH_SIZE)
 
 
+
     model = AcausalAutoencoderLightningModule(
-        AutoencoderLightningModuleConfig(
-            model=ModelConfig('acausal')
+        from_dict(
+            AutoencoderLightningModuleConfig, 
+            get_config(CONSTANTS.CONFIG_FILEPATH).get('RUNNER', {})
         )
     )
+
+    # model = AcausalAutoencoderLightningModule(
+    #     AutoencoderLightningModuleConfig(
+    #         model=ModelConfig('acausal', D_CODER=16384)
+    #     )
+    # )
 
 
     trainer = pl.Trainer(
