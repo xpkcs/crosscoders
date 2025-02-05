@@ -1,0 +1,11 @@
+boto3
+deepspeed
+einops
+lightning
+numpy
+ray[default,data,train,tune]
+torch
+tqdm
+
+sae-lens
+transformer-lens>=2.0.0

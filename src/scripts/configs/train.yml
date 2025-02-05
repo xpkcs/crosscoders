@@ -1,0 +1,22 @@
+
+
+GLOBALS:
+
+  EXPERIMENT:
+
+    MAX_EPOCHS: 1
+
+    # no seqs - (batch_size * seq_len, n_layers, d_model)
+    BATCH_SIZE: 50000
+    MAX_RECORDS: 1000000
+
+    # # seqs - (batch_size, seq_len, n_layers, d_model)
+    # BATCH_SIZE: 12
+    # MAX_RECORDS: 10000
+
+
+RUNNER:
+  MODEL:
+    CAUSALITY: acausal
+
+    # D_CODER: 16384
