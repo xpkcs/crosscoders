@@ -8,7 +8,7 @@ import torch
 
 from transformer_lens import HookedTransformer
 
-from crosscoders.configs.globals import HardwareConfig
+from crosscoders.dataclasses.configs.globals import HardwareConfig
 
 
 

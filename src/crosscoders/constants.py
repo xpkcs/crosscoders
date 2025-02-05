@@ -7,7 +7,7 @@ import os
 
 from dotenv import load_dotenv;     load_dotenv()
 
-from crosscoders.configs.runner import AutoencoderLightningModuleConfig
+from crosscoders.dataclasses.configs.runner import AutoencoderLightningModuleConfig
 from crosscoders.utils import from_dict, update_dataclass
 
 
@@ -30,7 +30,7 @@ def load_constants():
     global CONSTANTS
 
     # load global config object
-    from crosscoders.configs.globals import GlobalsConfig
+    from crosscoders.dataclasses.configs.globals import GlobalsConfig
     from crosscoders.utils import get_config
 
 

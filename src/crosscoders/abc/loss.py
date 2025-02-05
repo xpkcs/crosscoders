@@ -3,7 +3,7 @@
 
 
 from abc import abstractmethod
-from crosscoders.configs.loss import LossMetrics
+from crosscoders.dataclasses.metrics.loss import LossMetrics
 
 
 import torch

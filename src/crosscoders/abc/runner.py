@@ -7,7 +7,7 @@ import lightning as pl
 
 
 from crosscoders.abc import AutoencoderABC, LossABC
-from crosscoders.configs import AutoencoderLightningModuleConfig
+from crosscoders.dataclasses.configs.runner import AutoencoderLightningModuleConfig
 
 
 

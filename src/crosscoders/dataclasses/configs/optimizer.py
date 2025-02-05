@@ -8,7 +8,7 @@ from typing import Any, Callable, List, Literal, NamedTuple, Optional, Tuple, Ty
 
 import torch
 
-from crosscoders.abc import DataclassABC
+from crosscoders.abc.dataclass import DataclassABC
 
 
 

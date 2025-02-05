@@ -5,9 +5,9 @@
 from dataclasses import dataclass, field
 
 
-from crosscoders.configs import ModelConfig, OptimizerConfig
-from crosscoders.abc import DataclassABC
-from crosscoders.utils import dataclass_repr
+from crosscoders.dataclasses.configs.model import ModelConfig
+from crosscoders.dataclasses.configs.optimizer import OptimizerConfig
+from crosscoders.abc.dataclass import DataclassABC
 
 
 

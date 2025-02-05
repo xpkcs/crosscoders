@@ -7,7 +7,7 @@ from dataclasses import dataclass
 
 import torch
 
-from crosscoders.abc import DataclassABC
+from crosscoders.abc.dataclass import DataclassABC
 
 
 

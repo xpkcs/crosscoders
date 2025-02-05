@@ -15,11 +15,11 @@ import torch
 
 
 # from crosscoders.data.preprocessing import TokenToLatents
-from crosscoders.configs import ModelConfig
+from crosscoders.dataclasses.configs.model import ModelConfig
 from crosscoders.autoencoders.acausal import AcausalAutoencoderLightningModule
 
 from crosscoders import CONSTANTS
-from crosscoders.configs import AutoencoderLightningModuleConfig
+from crosscoders.dataclasses.configs.runner import AutoencoderLightningModuleConfig
 from crosscoders.data.dataset import TinyStoriesRayDataset
 from crosscoders.utils import from_dict, get_config
 

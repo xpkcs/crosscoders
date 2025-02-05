@@ -4,7 +4,7 @@ from dataclasses import dataclass, asdict, field
 from typing import Optional
 import torch
 
-from crosscoders.abc import DataclassABC
+from crosscoders.abc.dataclass import DataclassABC
 
 
 

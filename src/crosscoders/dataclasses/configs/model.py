@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 from typing import Any, Callable, List, Literal, NamedTuple, Optional, Tuple, TypeVar, Union, overload
 
 
-from crosscoders.configs import HardwareConfig
+from crosscoders.dataclasses.configs.globals import HardwareConfig
 from crosscoders.abc import DataclassABC
 
 

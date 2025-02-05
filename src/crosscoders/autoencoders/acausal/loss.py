@@ -4,8 +4,8 @@ import torch
 import einops
 
 
-from crosscoders.abc import LossABC
-from crosscoders.configs import LossMetrics
+from crosscoders.abc.loss import LossABC
+from crosscoders.dataclasses.metrics.loss import LossMetrics
 
 
 

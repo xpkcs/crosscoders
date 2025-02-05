@@ -4,7 +4,7 @@
 
 # import order matters
 from crosscoders import abc
-from crosscoders import configs
+from crosscoders import dataclasses
 from crosscoders.constants import CONSTANTS
 from crosscoders import autoencoders
 

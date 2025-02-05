@@ -6,7 +6,7 @@ from abc import abstractmethod
 # from typing import Any, Callable, List, Literal, Optional, Tuple, TypeVar, Union, overload
 
 
-from crosscoders.configs import ModelConfig
+from crosscoders.dataclasses.configs.model import ModelConfig
 
 
 
