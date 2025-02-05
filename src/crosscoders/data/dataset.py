@@ -12,11 +12,11 @@ from crosscoders.data.preprocessing import TokenToLatents
 
 
 def get_s3_keys(bucket_name, key_prefix):
-    
+
     bucket = boto3.resource('s3').Bucket(bucket_name)
 
     return [
-        f's3://{obj.bucket_name}/{obj.key}' 
+        f's3://{obj.bucket_name}/{obj.key}'
         for obj in bucket.objects.filter(Prefix=key_prefix, Marker=key_prefix)
     ]
 

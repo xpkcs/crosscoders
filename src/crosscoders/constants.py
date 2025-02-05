@@ -12,6 +12,13 @@ from crosscoders.utils import from_dict, update_dataclass
 
 
 
+# corresponds to the non-dataclass fields of the
+# `GlobalsConfig` dataclass at `src/crosscoders/configs/globals.py`.
+REQUIRED_ENV_VARS = [
+    'PROJECT_ROOT_DIR',
+    'CONFIG_FILEPATH',
+]
+
 
 def resolve_path(path):
 
@@ -29,22 +36,14 @@ def load_constants():
 
     try:
         cfg = get_config(resolve_path(os.environ['CONFIG_FILEPATH']))
-        cfg['GLOBALS'] |= {
-            'CONFIG_FILEPATH': resolve_path(os.environ['CONFIG_FILEPATH']),
-        }
+        cfg['GLOBALS'] |= {e: resolve_path(os.environ[e]) for e in REQUIRED_ENV_VARS}
 
     except KeyError as e:
         raise TypeError(f'Missing required env var: {e.args[0]}')
 
-    # CONSTANTS = ExperimentConfig(**cfg['experiment'])
-    # CONSTANTS = GlobalsConfig(**cfg['experiment'])
-    # print(CONSTANTS)
-    # update_dataclass(CONSTANTS, cfg['experiment'])
-    # print(CONSTANTS)
-
 
     CONSTANTS = from_dict(GlobalsConfig, cfg.get('GLOBALS', {}))
-    # cfg = from_dict(AutoencoderLightningModuleConfig, cfg.get('RUNNER', {}))
+    # RUNNER_CFG = from_dict(AutoencoderLightningModuleConfig, cfg.get('RUNNER', {}))
 
     print()
     print(' '.join(['-'* 25, 'CONSTANTS', '-' * 25]))

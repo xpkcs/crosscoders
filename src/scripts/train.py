@@ -53,7 +53,7 @@ def train_loop_per_worker():
 
     model = AcausalAutoencoderLightningModule(
         from_dict(
-            AutoencoderLightningModuleConfig, 
+            AutoencoderLightningModuleConfig,
             get_config(CONSTANTS.CONFIG_FILEPATH).get('RUNNER', {})
         )
     )
@@ -77,11 +77,10 @@ def train_loop_per_worker():
             ray.train.lightning.RayTrainReportCallback(),
             # EarlyStopping(monitor='n_tokens_processed', stopping_threshold=100)
         ],
-        # [1a] Optionally, disable the default checkpointing behavior
-        # in favor of the `RayTrainReportCallback` above.
         enable_checkpointing=False,
         gradient_clip_val=0.5,
         log_every_n_steps=10,
+        # accumulate_grad_batches=1,
     )
 
     trainer = ray.train.lightning.prepare_trainer(trainer)

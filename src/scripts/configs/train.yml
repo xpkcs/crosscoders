@@ -1,22 +1,22 @@
 
 
-
 GLOBALS:
-
-  PROJECT_ROOT_DIR: ~/repos/crosscoders
-  CONFIG_FILEPATH:
-  DATA_DIR: ~/repos/crosscoders/data
-
 
   EXPERIMENT:
 
-    BATCH_SIZE: 50000
     MAX_EPOCHS: 1
-    # MAX_TOKENS: 100000
 
-    # MAX_RECORDS: 50000
+    # no seqs - (batch_size * seq_len, n_layers, d_model)
+    BATCH_SIZE: 50000
+    MAX_RECORDS: 1000000
+
+    # # seqs - (batch_size, seq_len, n_layers, d_model)
+    # BATCH_SIZE: 12
+    # MAX_RECORDS: 10000
 
 
 RUNNER:
   MODEL:
     CAUSALITY: acausal
+
+    # D_CODER: 16384
