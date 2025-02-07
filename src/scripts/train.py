@@ -2,6 +2,8 @@
 
 
 
+import os
+import tempfile
 import datasets
 import lightning as pl
 import ray
@@ -15,13 +17,25 @@ import torch
 
 
 # from crosscoders.data.preprocessing import TokenToLatents
-from crosscoders.dataclasses.configs.model import ModelConfig
+from crosscoders.autoencoders.acausal.loss import AcausalLoss
+from crosscoders.autoencoders.acausal.model import AcausalAutoencoder
+from crosscoders.dataclasses.configs.runner import ModelConfig
 from crosscoders.autoencoders.acausal import AcausalAutoencoderLightningModule
 
 from crosscoders import CONSTANTS
 from crosscoders.dataclasses.configs.runner import AutoencoderLightningModuleConfig
 from crosscoders.data.dataset import TinyStoriesRayDataset
 from crosscoders.utils import from_dict, get_config
+
+
+import os
+
+import tempfile
+
+
+import torch.amp, torch.optim
+import datetime, numpy as np
+
 
 
 
@@ -33,6 +47,86 @@ from crosscoders.utils import from_dict, get_config
 #         batch_[k] = torch.as_tensor(np.stack([np.pad(_, ((0, b), (0, l), (0, d))) for _ in v]))
 
 #     return batch_
+
+
+def train_loop():
+    
+
+    train_ds = TinyStoriesRayDataset().load('activations')
+
+    train_dl = train_ds.iter_torch_batches(
+        # prefetch_batches=10,
+        batch_size=CONSTANTS.EXPERIMENT.BATCH_SIZE,
+        device='cuda'
+    )
+
+
+
+    cfg = from_dict(
+        AutoencoderLightningModuleConfig,
+        get_config(CONSTANTS.CONFIG_FILEPATH).get('RUNNER', {})
+    )
+
+    model = AcausalAutoencoder(cfg.MODEL)
+    model.to('cuda')
+
+    criterion = AcausalLoss()
+
+    # optimizer = cfg.OPTIMIZER.optimizer(
+    optimizer = torch.optim.AdamW(
+        model.parameters(),
+        **cfg.OPTIMIZER.parameters.asdict()
+    )
+
+    scaler = torch.amp.GradScaler("cuda", enabled=False)
+
+
+    for epoch in range(CONSTANTS.EXPERIMENT.NUM_EPOCHS):
+
+    # with torch.profiler.profile(
+    #         schedule=torch.profiler.schedule(wait=5, warmup=10, active=25, repeat=0),
+    #         # schedule=torch.profiler.schedule(wait=5, warmup=10, active=25, repeat=1),
+    #         # schedule=torch.profiler.schedule(wait=1, warmup=3, active=5, repeat=1),
+    #         on_trace_ready=torch.profiler.tensorboard_trace_handler(f'./log/{datetime.datetime.now(datetime.UTC).strftime("%Y-%m-%d_%H:%M:%S")}'),
+    #         record_shapes=True,
+    #         profile_memory=True,
+    #         # with_stack=True,
+    #         # with_modules=True,
+
+    # ) as prof:
+
+        model.train()
+        for batch_idx, batch in enumerate(train_dl):
+            
+            # prof.step()
+
+            with torch.autocast(device_type='cuda', dtype=torch.float16, enabled=False):
+                outputs = model(batch['resid_post'])
+                loss = criterion(outputs, batch['resid_post'], W_dec=model.W_dec, x_enc=model.x_enc)
+
+            scaler.scale(loss.loss).backward()
+            grad_norms = [param.grad.norm().item() for param in model.parameters() if param.grad is not None]
+            print(np.mean(grad_norms), np.std(grad_norms), np.min(grad_norms), np.max(grad_norms))
+
+            scaler.unscale_(optimizer)
+            torch.nn.utils.clip_grad_norm_(model.parameters(), 100)
+            scaler.step(optimizer)
+            scaler.update()
+
+            optimizer.zero_grad()
+
+
+            if batch_idx % 1 == 0:
+                metrics = {
+                    'loss': loss.loss.item(),
+                    'error': loss.error.item(),
+                    'l1': loss.l1.item(),
+                    'l0': loss.l0.item(),
+                }
+                print(batch_idx, metrics)
+
+
+
 
 
 def train_loop_per_worker():
@@ -51,12 +145,12 @@ def train_loop_per_worker():
 
 
 
-    model = AcausalAutoencoderLightningModule(
-        from_dict(
-            AutoencoderLightningModuleConfig,
-            get_config(CONSTANTS.CONFIG_FILEPATH).get('RUNNER', {})
-        )
-    )
+    # model = AcausalAutoencoderLightningModule(
+    #     from_dict(
+    #         AutoencoderLightningModuleConfig,
+    #         get_config(CONSTANTS.CONFIG_FILEPATH).get('RUNNER', {})
+    #     )
+    # )
 
     # model = AcausalAutoencoderLightningModule(
     #     AutoencoderLightningModuleConfig(
@@ -64,29 +158,112 @@ def train_loop_per_worker():
     #     )
     # )
 
-
-    trainer = pl.Trainer(
-        # max_epochs=10,
-        max_epochs=CONSTANTS.EXPERIMENT.MAX_EPOCHS,
-        devices='auto',
-        accelerator='auto',
-        # strategy=ray.train.lightning.RayDDPStrategy(),
-        strategy=ray.train.lightning.RayDeepSpeedStrategy(),
-        plugins=[ray.train.lightning.RayLightningEnvironment()],
-        callbacks=[
-            ray.train.lightning.RayTrainReportCallback(),
-            # EarlyStopping(monitor='n_tokens_processed', stopping_threshold=100)
-        ],
-        enable_checkpointing=False,
-        gradient_clip_val=0.5,
-        log_every_n_steps=10,
-        # accumulate_grad_batches=1,
+    cfg = from_dict(
+        AutoencoderLightningModuleConfig,
+        get_config(CONSTANTS.CONFIG_FILEPATH).get('RUNNER', {})
     )
 
-    trainer = ray.train.lightning.prepare_trainer(trainer)
+    model = AcausalAutoencoder(cfg.MODEL)
 
-    trainer.fit(model, train_dataloaders=train_dl)
-    # trainer.fit(model, train_dataloaders=train_dl, val_dataloaders=valid_dl)
+    criterion = AcausalLoss()
+
+    optimizer = cfg.OPTIMIZER.optimizer(
+        model.parameters(),
+        **cfg.OPTIMIZER.parameters.asdict()
+    )
+
+    print(os.getcwd())
+
+
+    # for epoch in range(1):
+
+    with torch.profiler.profile(
+            schedule=torch.profiler.schedule(wait=1, warmup=1, active=5, repeat=1),
+            on_trace_ready=torch.profiler.tensorboard_trace_handler('./crosscoders'),
+            record_shapes=True,
+            profile_memory=True,
+            with_stack=True
+    ) as prof:
+
+        model.train()
+        for batch_idx, batch in enumerate(train_dl):
+            prof.step()
+            # This is done by `prepare_data_loader`!
+            # images, labels = images.to("cuda"), labels.to("cuda")
+            outputs = model(batch['resid_post'])
+            loss = criterion(outputs, batch['resid_post'], W_dec=model.W_dec, x_enc=model.x_enc)
+            optimizer.zero_grad()
+            loss.loss.backward()
+            optimizer.step()
+
+
+            if batch_idx % 1 == 0:
+                metrics = {
+                    'loss': loss.loss.item(),
+                    'error': loss.error.item(),
+                    'l1': loss.l1.item(),
+                    'l0': loss.l0.item(),
+                }
+                ray.train.report(
+                    metrics
+                )
+
+
+
+
+            # metrics = {
+            #     'loss': loss.loss.item(),
+            #     'error': loss.error.item(),
+            #     'l1': loss.l1.item(),
+            #     'l0': loss.l0.item(),
+            # }
+            # with tempfile.TemporaryDirectory() as temp_checkpoint_dir:
+            #     torch.save(
+            #         model.state_dict(),
+            #         os.path.join(temp_checkpoint_dir, "model.pt")
+            #     )
+            #     ray.train.report(
+            #         metrics,
+            #         checkpoint=ray.train.Checkpoint.from_directory(temp_checkpoint_dir),
+            #     )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    # trainer = pl.Trainer(
+    #     # max_epochs=10,
+    #     max_epochs=CONSTANTS.EXPERIMENT.MAX_EPOCHS,
+    #     devices='auto',
+    #     accelerator='auto',
+    #     # strategy=ray.train.lightning.RayDDPStrategy(),
+    #     strategy=ray.train.lightning.RayDeepSpeedStrategy(),
+    #     plugins=[ray.train.lightning.RayLightningEnvironment()],
+    #     callbacks=[
+    #         ray.train.lightning.RayTrainReportCallback(),
+    #         # EarlyStopping(monitor='n_tokens_processed', stopping_threshold=100)
+    #     ],
+    #     enable_checkpointing=False,
+    #     gradient_clip_val=0.5,
+    #     log_every_n_steps=10,
+    #     # accumulate_grad_batches=1,
+    # )
+
+    # trainer = ray.train.lightning.prepare_trainer(trainer)
+
+    # trainer.fit(model, train_dataloaders=train_dl)
+    # # trainer.fit(model, train_dataloaders=train_dl, val_dataloaders=valid_dl)
 
 
 
