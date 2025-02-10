@@ -2,7 +2,7 @@
 
 
 
-from dataclasses import dataclass, field
+from dataclasses import MISSING, dataclass, field
 
 
 from crosscoders.dataclasses.configs.globals import HardwareConfig
@@ -16,15 +16,18 @@ import torch
 
 @dataclass(repr=False)
 class LossConfig(DataclassABC):
-
+    
     pass
+    # L1_COEFFICIENT: float = 8e-5
+    # L1_COEFFICIENT: float = 1.
 
 
 @dataclass(repr=False)
 class AcausalLossConfig(LossConfig):
 
+    # L1_COEFFICIENT: float = 8e-5
+    L1_COEFFICIENT: float = 1.
 
-    L1_COEFFICIENT: float = 8e-5
 
 
 
@@ -68,6 +71,16 @@ class RunnerConfig(DataclassABC):
 
     MODEL: ModelConfig
 
+    LOSS: Optional[LossConfig] = None
+
     OPTIMIZER: OptimizerConfig = field(default_factory=OptimizerConfig)
+
+
+    def __post_init__(self):
+
+        if self.LOSS != MISSING:
+            match self.MODEL.CAUSALITY:
+                case 'acausal':
+                    self.LOSS = AcausalLossConfig()
 
 
