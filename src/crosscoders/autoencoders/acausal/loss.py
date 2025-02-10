@@ -5,6 +5,7 @@ import einops
 
 
 from crosscoders.abc.loss import LossABC
+from crosscoders.dataclasses.configs.runner import RunnerConfig
 from crosscoders.dataclasses.metrics.loss import LossMetrics
 
 
@@ -12,7 +13,7 @@ from crosscoders.dataclasses.metrics.loss import LossMetrics
 
 class AcausalLoss(LossABC):
 
-    def __call__(self, target: torch.Tensor, predicted: torch.Tensor, **kwargs: dict) -> LossMetrics:
+    def loss(self, target: torch.Tensor, predicted: torch.Tensor, **kwargs: dict) -> LossMetrics:
 
         per_layer_l2_norm = einops.reduce(
             (target - predicted).pow(2),

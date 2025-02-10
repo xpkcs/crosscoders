@@ -2,77 +2,55 @@
 
 
 
+import datetime
 from functools import cached_property
 from typing import Dict, Optional
+import einops
 import torch
-from crosscoders.abc import AutoencoderLightningModuleABC
+from crosscoders.abc import AutoencoderRunnerABC
 from crosscoders.autoencoders.acausal.loss import AcausalLoss
 from crosscoders.dataclasses.configs.runner import RunnerConfig
 from crosscoders.autoencoders.acausal import AcausalAutoencoder
 # from crosscoders.constants import MAX_TOKENS
 from crosscoders import CONSTANTS
+from crosscoders.dataclasses.metrics.loss import LossMetrics
+from torch.utils.tensorboard import SummaryWriter
 
 
 
 
-class AcausalAutoencoderLightningModule(AutoencoderLightningModuleABC):
+class AcausalAutoencoderRunner(AutoencoderRunnerABC, AcausalLoss):
 
     def __init__(self, cfg: RunnerConfig) -> None:
 
         super().__init__(cfg)
 
-        self.model = AcausalAutoencoder(self.cfg.MODEL)
+        self.model: AcausalAutoencoder = AcausalAutoencoder(self.cfg.MODEL)
 
-        self.loss = AcausalLoss()
+        self.optimizer = self.configure_optimizers()
 
-        self.n_tokens_processed: int = 0
-        self.n_seqs_processed: int = 0
-
-
-    # @cached_property
-    # def model(self) -> AcausalAutoencoder:
-
-    #     return AcausalAutoencoder(self.cfg.MODEL)
+        self.writer = SummaryWriter(f'{CONSTANTS.PROJECT_ROOT_DIR}/log/{datetime.datetime.now(datetime.UTC).strftime("%Y-%m-%d_%H:%M:%S")}')
+        self.num_tokens_processed: int = 0
 
 
-    # @cached_property
-    # def loss(self) -> AcausalLoss:
+    def training_step(self, batch: Dict[str, torch.Tensor]) -> LossMetrics:
 
-    #     return AcausalLoss()
+        x = batch['resid_post']
+        self.num_tokens_processed += x.shape[0]
+        
+        outputs = self.model(x)
+        loss = self.loss(outputs, x, W_dec=self.model.W_dec, x_enc=self.model.x_enc)
+        loss.loss.backward()
+        
+        total_grad_norm = torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1)
+        self.writer.add_scalar(f'total_grad_norm', total_grad_norm, self.num_tokens_processed)
+        
+        self.optimizer.step()
+        self.optimizer.zero_grad()
 
+        self.writer.add_scalar(f'loss/loss', loss.loss.item(), self.num_tokens_processed)
+        self.writer.add_scalar(f'loss/error', loss.error.item(), self.num_tokens_processed)
+        self.writer.add_scalar(f'loss/l1', loss.l1.item(), self.num_tokens_processed)
+        self.writer.add_scalar(f'loss/l0', loss.l0.item(), self.num_tokens_processed)
 
-
-
-    # def on_before_batch_transfer(self, batch, dataloader_idx):
-
-    #     batch = batch['resid_post']
-
-    #     return batch
-
-
-    def on_train_batch_start(self, batch: Dict[str, torch.Tensor], batch_idx: int) -> Optional[int]:
-
-        if type(CONSTANTS.EXPERIMENT.MAX_TOKENS) is int and self.n_tokens_processed > CONSTANTS.EXPERIMENT.MAX_TOKENS:
-            return -1
-
-
-    def training_step(self, batch: Dict[str, torch.Tensor]) -> torch.Tensor:
-
-        # batch_size * seq_len
-        # self.n_tokens_processed += int(batch['resid_post'].shape[0] * batch['resid_post'].shape[1])
-        # self.n_seqs_processed += batch['resid_post'].shape[0]
-        self.n_tokens_processed += batch['resid_post'].shape[0]
-
-        # raise NotImplementedError({k: type(v) for k,v in batch.items()})
-
-        loss_metrics = self.loss(batch['resid_post'], self(batch['resid_post']), W_dec=self.model.W_dec, x_enc=self.model.x_enc)
-
-        self.log('loss', loss_metrics.loss, on_step=True, prog_bar=True)
-        self.log('error', loss_metrics.reconstruction_error, on_step=True, prog_bar=True)
-        self.log('l1', loss_metrics.regularization_penalty_l1, on_step=True, prog_bar=True)
-        # self.log('l0', loss_metrics.regularization_penalty_l0, on_step=True, prog_bar=True)
-        self.log('n_tokens_processed', self.n_tokens_processed, on_step=True, prog_bar=True)
-        # self.log('n_seqs_processed', self.n_seqs_processed, on_step=True, prog_bar=True)
-
-
-        return loss_metrics.loss
+        return loss

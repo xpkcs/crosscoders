@@ -12,17 +12,13 @@ from crosscoders.dataclasses.configs.runner import RunnerConfig
 
 
 
-class AutoencoderLightningModuleABC(pl.LightningModule):
-
-    model: AutoencoderABC
-    loss: LossABC
-
+class AutoencoderRunnerABC:
 
     def __init__(self, cfg: RunnerConfig):
 
         super().__init__()
 
-        self.cfg = cfg
+        self.cfg: RunnerConfig = cfg
 
 
     # @property
