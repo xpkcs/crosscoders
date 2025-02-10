@@ -7,7 +7,7 @@ from typing import Dict, Optional
 import torch
 from crosscoders.abc import AutoencoderLightningModuleABC
 from crosscoders.autoencoders.acausal.loss import AcausalLoss
-from crosscoders.dataclasses.configs.runner import AutoencoderLightningModuleConfig
+from crosscoders.dataclasses.configs.runner import RunnerConfig
 from crosscoders.autoencoders.acausal import AcausalAutoencoder
 # from crosscoders.constants import MAX_TOKENS
 from crosscoders import CONSTANTS
@@ -17,7 +17,7 @@ from crosscoders import CONSTANTS
 
 class AcausalAutoencoderLightningModule(AutoencoderLightningModuleABC):
 
-    def __init__(self, cfg: AutoencoderLightningModuleConfig) -> None:
+    def __init__(self, cfg: RunnerConfig) -> None:
 
         super().__init__(cfg)
 

@@ -23,10 +23,10 @@ from crosscoders.dataclasses.configs.runner import ModelConfig
 from crosscoders.autoencoders.acausal import AcausalAutoencoderLightningModule
 
 from crosscoders import CONSTANTS
-from crosscoders.dataclasses.configs.runner import AutoencoderLightningModuleConfig
+from crosscoders.dataclasses.configs.runner import RunnerConfig
 from crosscoders.data.dataset import TinyStoriesRayDataset
 from crosscoders.utils import from_dict, get_config
-
+from torch.utils.tensorboard import SummaryWriter
 
 import os
 
@@ -63,7 +63,7 @@ def train_loop():
 
 
     cfg = from_dict(
-        AutoencoderLightningModuleConfig,
+        RunnerConfig,
         get_config(CONSTANTS.CONFIG_FILEPATH).get('RUNNER', {})
     )
 
@@ -80,8 +80,9 @@ def train_loop():
 
     scaler = torch.amp.GradScaler("cuda", enabled=False)
 
+    writer = SummaryWriter(f'{CONSTANTS.PROJECT_ROOT_DIR}/log/{datetime.datetime.now(datetime.UTC).strftime("%Y-%m-%d_%H:%M:%S")}')
+    num_tokens_processed = 0
 
-    for epoch in range(CONSTANTS.EXPERIMENT.NUM_EPOCHS):
 
     # with torch.profiler.profile(
     #         schedule=torch.profiler.schedule(wait=5, warmup=10, active=25, repeat=0),
@@ -95,71 +96,54 @@ def train_loop():
 
     # ) as prof:
 
-        model.train()
-        for batch_idx, batch in enumerate(train_dl):
-            
-            # prof.step()
+    model.train()
+    for batch_idx, batch in enumerate(train_dl):
+        
+        # prof.step()
 
-            with torch.autocast(device_type='cuda', dtype=torch.float16, enabled=False):
-                outputs = model(batch['resid_post'])
-                loss = criterion(outputs, batch['resid_post'], W_dec=model.W_dec, x_enc=model.x_enc)
+        with torch.autocast(device_type='cuda', dtype=torch.float16, enabled=False):
+            outputs = model(batch['resid_post'])
+            loss = criterion(outputs, batch['resid_post'], W_dec=model.W_dec, x_enc=model.x_enc)
 
-            scaler.scale(loss.loss).backward()
-            grad_norms = [param.grad.norm().item() for param in model.parameters() if param.grad is not None]
-            print(np.mean(grad_norms), np.std(grad_norms), np.min(grad_norms), np.max(grad_norms))
+        scaler.scale(loss.loss).backward()
+        scaler.unscale_(optimizer)
 
-            scaler.unscale_(optimizer)
-            torch.nn.utils.clip_grad_norm_(model.parameters(), 100)
-            scaler.step(optimizer)
-            scaler.update()
+        total_grad_norm = torch.nn.utils.clip_grad_norm_(model.parameters(), 1)
+        writer.add_scalar(f'total_grad_norm', total_grad_norm, num_tokens_processed)
 
-            optimizer.zero_grad()
+        scaler.step(optimizer)
+        scaler.update()
 
-
-            if batch_idx % 1 == 0:
-                metrics = {
-                    'loss': loss.loss.item(),
-                    'error': loss.error.item(),
-                    'l1': loss.l1.item(),
-                    'l0': loss.l0.item(),
-                }
-                print(batch_idx, metrics)
+        optimizer.zero_grad()
 
 
+        # if batch_idx % 1 == 0:
+        #     metrics = {
+        #         'loss': loss.loss.item(),
+        #         'error': loss.error.item(),
+        #         'l1': loss.l1.item(),
+        #         'l0': loss.l0.item(),
+        #     }
+        #     print(batch_idx, metrics)
+        writer.add_scalar(f'loss/loss', loss.loss.item(), num_tokens_processed)
+        writer.add_scalar(f'loss/error', loss.error.item(), num_tokens_processed)
+        writer.add_scalar(f'loss/l1', loss.l1.item(), num_tokens_processed)
+        writer.add_scalar(f'loss/l0', loss.l0.item(), num_tokens_processed)
 
 
 
 def train_loop_per_worker():
 
-    # dataloader
+
     train_dl = ray.train.get_dataset_shard('train').iter_torch_batches(
         batch_size=CONSTANTS.EXPERIMENT.BATCH_SIZE,
-        # collate_fn=lambda _: {k: torch.as_tensor(np.stack(v)) for k, v in _.items()},
-        # collate_fn=lambda _: {k: torch.as_tensor(np.stack([np.pad(_, ()) for _ in v])) for k, v in _.items()},
         # local_shuffle_buffer_size=16
     )
-    # valid_dl = ray.train.get_dataset_shard('valid').iter_torch_batches(batch_size=cfg.EXPERIMENT.BATCH_SIZE)
-
-    # train_dl = train_ds.iter_torch_batches(batch_size=cfg.EXPERIMENT.BATCH_SIZE)
-    # val_dl = val_ds.iter_torch_batches(batch_size=cfg.EXPERIMENT.BATCH_SIZE)
 
 
-
-    # model = AcausalAutoencoderLightningModule(
-    #     from_dict(
-    #         AutoencoderLightningModuleConfig,
-    #         get_config(CONSTANTS.CONFIG_FILEPATH).get('RUNNER', {})
-    #     )
-    # )
-
-    # model = AcausalAutoencoderLightningModule(
-    #     AutoencoderLightningModuleConfig(
-    #         model=ModelConfig('acausal', D_CODER=16384)
-    #     )
-    # )
 
     cfg = from_dict(
-        AutoencoderLightningModuleConfig,
+        RunnerConfig,
         get_config(CONSTANTS.CONFIG_FILEPATH).get('RUNNER', {})
     )
 
@@ -172,60 +156,61 @@ def train_loop_per_worker():
         **cfg.OPTIMIZER.parameters.asdict()
     )
 
-    print(os.getcwd())
+    writer = SummaryWriter(f'{CONSTANTS.PROJECT_ROOT_DIR}/log/{datetime.datetime.now(datetime.UTC).strftime("%Y-%m-%d_%H:%M:%S")}')
+    num_tokens_processed = 0
 
 
-    # for epoch in range(1):
+    model.train()
+    for batch_idx, batch in enumerate(train_dl):
 
-    with torch.profiler.profile(
-            schedule=torch.profiler.schedule(wait=1, warmup=1, active=5, repeat=1),
-            on_trace_ready=torch.profiler.tensorboard_trace_handler('./crosscoders'),
-            record_shapes=True,
-            profile_memory=True,
-            with_stack=True
-    ) as prof:
+        x = batch['resid_post']
+        num_tokens_processed += x.shape[0]
+        
+        outputs = model(x)
+        loss = criterion(outputs, x, W_dec=model.W_dec, x_enc=model.x_enc)
+        loss.loss.backward()
+        
+        total_grad_norm = torch.nn.utils.clip_grad_norm_(model.parameters(), 1)
+        writer.add_scalar(f'total_grad_norm', total_grad_norm, num_tokens_processed)
+        
+        optimizer.step()
+        optimizer.zero_grad()
 
-        model.train()
-        for batch_idx, batch in enumerate(train_dl):
-            prof.step()
-            # This is done by `prepare_data_loader`!
-            # images, labels = images.to("cuda"), labels.to("cuda")
-            outputs = model(batch['resid_post'])
-            loss = criterion(outputs, batch['resid_post'], W_dec=model.W_dec, x_enc=model.x_enc)
-            optimizer.zero_grad()
-            loss.loss.backward()
-            optimizer.step()
-
-
-            if batch_idx % 1 == 0:
-                metrics = {
-                    'loss': loss.loss.item(),
-                    'error': loss.error.item(),
-                    'l1': loss.l1.item(),
-                    'l0': loss.l0.item(),
-                }
-                ray.train.report(
-                    metrics
-                )
+        writer.add_scalar(f'loss/loss', loss.loss.item(), num_tokens_processed)
+        writer.add_scalar(f'loss/error', loss.error.item(), num_tokens_processed)
+        writer.add_scalar(f'loss/l1', loss.l1.item(), num_tokens_processed)
+        writer.add_scalar(f'loss/l0', loss.l0.item(), num_tokens_processed)
 
 
+        # if batch_idx % 1 == 0:
+        #     metrics = {
+        #         'loss': loss.loss.item(),
+        #         'error': loss.error.item(),
+        #         'l1': loss.l1.item(),
+        #         'l0': loss.l0.item(),
+        #     }
+        #     ray.train.report(
+        #         metrics
+        #     )
 
 
-            # metrics = {
-            #     'loss': loss.loss.item(),
-            #     'error': loss.error.item(),
-            #     'l1': loss.l1.item(),
-            #     'l0': loss.l0.item(),
-            # }
-            # with tempfile.TemporaryDirectory() as temp_checkpoint_dir:
-            #     torch.save(
-            #         model.state_dict(),
-            #         os.path.join(temp_checkpoint_dir, "model.pt")
-            #     )
-            #     ray.train.report(
-            #         metrics,
-            #         checkpoint=ray.train.Checkpoint.from_directory(temp_checkpoint_dir),
-            #     )
+
+
+    metrics = {
+        'loss': loss.loss.item(),
+        'error': loss.error.item(),
+        'l1': loss.l1.item(),
+        'l0': loss.l0.item(),
+    }
+    with tempfile.TemporaryDirectory() as temp_checkpoint_dir:
+        torch.save(
+            model.state_dict(),
+            os.path.join(temp_checkpoint_dir, "model.pt")
+        )
+        ray.train.report(
+            metrics,
+            checkpoint=ray.train.Checkpoint.from_directory(temp_checkpoint_dir),
+        )
 
 
 

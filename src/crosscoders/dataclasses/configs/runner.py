@@ -64,7 +64,7 @@ class OptimizerConfig(DataclassABC):
 
 
 @dataclass(repr=False)
-class AutoencoderLightningModuleConfig(DataclassABC):
+class RunnerConfig(DataclassABC):
 
     MODEL: ModelConfig
 

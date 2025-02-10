@@ -7,7 +7,7 @@
 
 # from crosscoders.dataclasses.configs.optimizer import OptimizerConfig
 # from crosscoders.dataclasses.configs.model import ModelConfig
-# from crosscoders.dataclasses.configs.runner import AutoencoderLightningModuleConfig
+# from crosscoders.dataclasses.configs.runner import RunnerConfig
 # # from crosscoders.configs.experiment import ExperimentConfig
 
 # from crosscoders.dataclasses.loss import LossMetrics

@@ -11,7 +11,7 @@ from crosscoders.dataclasses.configs.globals import (
 from crosscoders.dataclasses.configs.runner import (
     ModelConfig,
     OptimizerConfig,
-    AutoencoderLightningModuleConfig
+    RunnerConfig
 )
 
 from crosscoders.dataclasses.metrics.loss import LossMetrics
