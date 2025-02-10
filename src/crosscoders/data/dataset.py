@@ -37,16 +37,10 @@ class TinyStoriesRayDataset:
             case 'tokens':
                 hf_dataset = datasets.load_dataset(self.hf_dataset_name, streaming=True)
                 ds = ray.data.from_huggingface(hf_dataset[self.slice], concurrency=1)
-
-            case 'activations':
-                ds = ray.data.read_parquet(get_s3_keys(self.bucket_name, self.s3_prefix))
-
-
-        if CONSTANTS.EXPERIMENT.MAX_RECORDS:
-            ds = ds.limit(CONSTANTS.EXPERIMENT.MAX_RECORDS)
-
-        match which:
-            case 'tokens':
+                
+                if CONSTANTS.EXPERIMENT.MAX_RECORDS:
+                    ds = ds.limit(CONSTANTS.EXPERIMENT.MAX_RECORDS)
+                
                 ds = ds.map_batches(
                     TokenToLatents,
                     batch_size=CONSTANTS.EXPERIMENT.BATCH_SIZE,
@@ -54,6 +48,13 @@ class TinyStoriesRayDataset:
                     num_gpus=1,
                     num_cpus=1
                 )
+
+                if CONSTANTS.EXPERIMENT.MAX_TOKENS:
+                    ds = ds.limit(CONSTANTS.EXPERIMENT.MAX_TOKENS)
+
+            case 'activations':
+                ds = ray.data.read_parquet(get_s3_keys(self.bucket_name, self.s3_prefix))
+                ds = ds.limit(CONSTANTS.EXPERIMENT.MAX_TOKENS)
 
 
         return ds
