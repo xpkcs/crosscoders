@@ -7,7 +7,7 @@ import einops
 
 
 from crosscoders.abc import AutoencoderABC
-from crosscoders.dataclasses.configs.model import ModelConfig
+from crosscoders.dataclasses.configs.runner import ModelConfig
 
 
 
