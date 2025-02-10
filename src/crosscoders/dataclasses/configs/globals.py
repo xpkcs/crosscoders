@@ -18,16 +18,23 @@ class HardwareConfig(DataclassABC):
 @dataclass(repr=False)
 class ExperimentConfig(DataclassABC):
 
-    BATCH_SIZE: int
-    MAX_EPOCHS: int = 1
-    MAX_TOKENS: Optional[int] = None
+    BATCH_SIZE: int # = 8192
     MAX_RECORDS: Optional[int] = None
+    # MAX_EPOCHS: int = 1
+    MAX_BATCHES: Optional[int] = 1000000
+    MAX_TOKENS: Optional[int] = None
 
     # NUM_GPUS_ACTIVATION: float | int = 0.4
     NUM_GPUS: float | int = 1
     NUM_TRAINERS: int = 1
 
     HARDWARE: Optional[HardwareConfig] = field(default_factory=HardwareConfig)
+
+
+    def __post_init__(self, **kwargs):
+        
+        if self.MAX_TOKENS is None:
+            self.MAX_TOKENS = self.BATCH_SIZE * self.MAX_BATCHES
 
 
 @dataclass(repr=False)
