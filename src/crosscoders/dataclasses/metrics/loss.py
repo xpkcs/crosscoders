@@ -17,9 +17,14 @@ class LossMetrics(DataclassABC):
 
     loss: torch.Tensor       # only required output to run backward()
 
-    reconstruction_error: torch.Tensor
-    regularization_penalty_l1: torch.Tensor
-    regularization_penalty_l0: torch.Tensor
+    error: torch.Tensor
+    l1: torch.Tensor
+    l0: torch.Tensor
+
+
+    # def asdict(self):
+        
+    #     return {_.item() for _ in vars(self)}
 
 # class LossOutput(NamedTuple):
 #     l2_loss: torch.Tensor

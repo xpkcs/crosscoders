@@ -14,6 +14,19 @@ import torch
 
 
 
+@dataclass(repr=False)
+class LossConfig(DataclassABC):
+
+    pass
+
+
+@dataclass(repr=False)
+class AcausalLossConfig(LossConfig):
+
+
+    L1_COEFFICIENT: float = 8e-5
+
+
 
 
 @dataclass(repr=False)
@@ -26,7 +39,7 @@ class ModelConfig(DataclassABC):
     # n_layers_input: int = 1
     # n_layers_predict: int = 11
     D_MODEL: int = 768
-    D_CODER: int = 2048
+    D_CODER: int = 16384
 
     # hardware
     # dtype: str | torch.dtype = torch.float32
@@ -38,8 +51,9 @@ class ModelConfig(DataclassABC):
 @dataclass(repr=False)
 class OptimizerParameters(DataclassABC):
 
-    lr: float = 1e-3
+    lr: float = 1e-4
     betas: Tuple[float,float] = (.9,.999)
+    fused: bool = True
 
 
 @dataclass(repr=False)

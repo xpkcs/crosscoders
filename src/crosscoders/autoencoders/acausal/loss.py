@@ -31,18 +31,18 @@ class AcausalLoss(LossABC):
             'd_coder n_layers -> d_coder',
             'sum'
         )
-        regularization_penalty_l1 = einops.einsum(
+        l1 = einops.einsum(
             kwargs['x_enc'], feature_decoder_norms,
             '... d_coder , d_coder -> ...'
         ).mean()
 
 
-        regularization_penalty_l0 = 0 # TODO
+        l0 = (kwargs['x_enc'] > 0).sum(-1).float().mean()
 
 
         return LossMetrics(
-            loss=reconstruction_error + regularization_penalty_l1,
-            reconstruction_error=reconstruction_error,
-            regularization_penalty_l1=regularization_penalty_l1,
-            regularization_penalty_l0=regularization_penalty_l0
+            loss=reconstruction_error + l1,
+            error=reconstruction_error,
+            l1=l1,
+            l0=l0
         )
