@@ -54,3 +54,13 @@ class AcausalAutoencoderRunner(AutoencoderRunnerABC, AcausalLoss):
         self.writer.add_scalar(f'loss/l0', loss.l0.item(), self.num_tokens_processed)
 
         return loss
+
+
+    def fit(self, dl):
+        
+        for batch_idx, batch in enumerate(dl):
+
+            loss = self.training_step(batch)
+
+
+        return loss
