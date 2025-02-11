@@ -25,7 +25,7 @@ from crosscoders.dataclasses.configs.runner import LossConfig, ModelConfig
 from crosscoders import CONSTANTS
 from crosscoders.dataclasses.configs.runner import RunnerConfig
 from crosscoders.data.dataset import TinyStoriesRayDataset
-from crosscoders.utils import from_dict, get_config
+from crosscoders.utils import from_dict, get_config, update_dataclass
 from torch.utils.tensorboard import SummaryWriter
 
 import os
@@ -40,22 +40,31 @@ import datetime, numpy as np
 
 
 
-def train_loop_per_worker():
+def train_loop_per_worker(ray_cfg, train_ds):
 
 
-    train_dl = ray.train.get_dataset_shard('train').iter_torch_batches(
+    # raise NotImplementedError(data)
+
+
+
+    # train_dl = ray.train.get_dataset_shard('train').iter_torch_batches(
+    train_dl = train_ds.iter_torch_batches(
         batch_size=CONSTANTS.EXPERIMENT.BATCH_SIZE,
         # local_shuffle_buffer_size=16
     )
 
 
-
-    cfg = from_dict(
+    
+    runner_cfg = from_dict(
         RunnerConfig,
         get_config(CONSTANTS.CONFIG_FILEPATH).get('RUNNER', {})
     )
 
-    runner = AcausalAutoencoderRunner(cfg)
+    update_dataclass(runner_cfg, ray_cfg)
+
+
+
+    runner = AcausalAutoencoderRunner(runner_cfg)
     loss = runner.fit(train_dl)
 
 

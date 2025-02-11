@@ -6,6 +6,7 @@ import datetime
 from functools import cached_property
 from typing import Dict, Optional
 import einops
+import ray, ray.train
 import torch
 from crosscoders.abc import AutoencoderRunnerABC
 from crosscoders.autoencoders.acausal.loss import AcausalLoss
@@ -39,7 +40,7 @@ class AcausalAutoencoderRunner(AutoencoderRunnerABC, AcausalLoss):
         self.num_tokens_processed += x.shape[0]
         
         outputs = self.model(x)
-        loss = self.loss(outputs, x, W_dec=self.model.W_dec, x_enc=self.model.x_enc)
+        loss = self.loss(outputs, x, W_dec=self.model.W_dec, x_enc=self.model.x_enc, L1_COEFFICIENT=self.cfg.LOSS.L1_COEFFICIENT)
         loss.loss.backward()
         
         total_grad_norm = torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1)
@@ -61,6 +62,17 @@ class AcausalAutoencoderRunner(AutoencoderRunnerABC, AcausalLoss):
         for batch_idx, batch in enumerate(dl):
 
             loss = self.training_step(batch)
+
+            # if batch_idx % 10 == 0:
+            ray.train.report(
+                {
+                    'loss': loss.loss.item(),
+                    'error': loss.error.item(),
+                    'l1': loss.l1.item(),
+                    'l0': loss.l0.item(),
+                    'n_tokens': self.num_tokens_processed,
+                },
+            )
 
 
         return loss

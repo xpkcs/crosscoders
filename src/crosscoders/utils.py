@@ -31,7 +31,7 @@ def update_dataclass(config: Any, updates: Dict[str, Any]) -> None:
 
     assert isinstance(updates, dict)
 
-    print(config, updates)
+    # print(config, updates)
     for field_name, new_value in updates.items():
 
         try:

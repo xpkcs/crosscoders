@@ -19,7 +19,7 @@ class LossConfig(DataclassABC):
     
     pass
     # L1_COEFFICIENT: float = 8e-5
-    # L1_COEFFICIENT: float = 1.
+    L1_COEFFICIENT: float = 1.
 
 
 @dataclass(repr=False)
@@ -54,7 +54,7 @@ class ModelConfig(DataclassABC):
 @dataclass(repr=False)
 class OptimizerParameters(DataclassABC):
 
-    lr: float = 1e-4
+    lr: float = 0.0004  # 1e-4
     betas: Tuple[float,float] = (.9,.999)
     fused: bool = True
 
