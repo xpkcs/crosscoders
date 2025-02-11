@@ -7,18 +7,15 @@ import lightning as pl
 
 
 from crosscoders.abc import AutoencoderABC, LossABC
+from crosscoders.abc.base import BaseABC
 from crosscoders.dataclasses.configs.runner import RunnerConfig
 
 
 
 
-class AutoencoderRunnerABC:
+class AutoencoderRunnerABC(BaseABC):
 
-    def __init__(self, cfg: RunnerConfig):
-
-        super().__init__()
-
-        self.cfg: RunnerConfig = cfg
+    cfg: RunnerConfig
 
 
     # @property

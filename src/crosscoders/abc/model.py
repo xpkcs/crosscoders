@@ -6,22 +6,22 @@ from abc import abstractmethod
 # from typing import Any, Callable, List, Literal, Optional, Tuple, TypeVar, Union, overload
 
 
+from crosscoders.abc.base import BaseABC
 from crosscoders.dataclasses.configs.runner import ModelConfig
 
 
 
 
-class AutoencoderABC:
-    """
-    """
+class AutoencoderABC(BaseABC):
 
-    def __init__(self, cfg: ModelConfig):
+    cfg: ModelConfig
+    
 
-        super().__init__()
+    # def __init__(self, cfg: ModelConfig):
 
-        self.cfg = cfg
+    #     super().__init__(cfg)
 
-    #     self._init()
+    #     # self._init()
 
 
     # @abstractmethod
