@@ -180,3 +180,7 @@ conda/
 conda/**
 .conda/
 .conda/**
+
+
+**/log
+**/log/**
