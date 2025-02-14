@@ -7,7 +7,7 @@ import tempfile
 import datasets
 import lightning as pl
 import ray
-import ray.train
+import ray.train, ray.train.torch
 import ray.train.lightning
 from ray.train.torch import TorchTrainer
 from ray.runtime_env import RuntimeEnv
@@ -37,24 +37,49 @@ import torch.amp, torch.optim
 import datetime, numpy as np
 
 
+def get_x_scalar(ds, runner_cfg):
+        
+    def get_batch_scalar(batch):
+
+        return {
+            'resid_post_norm_sum': [np.linalg.norm(batch['resid_post'], ord=2, axis=-1).sum()],
+            'resid_post_norm_count': [batch['resid_post'].shape[0] * batch['resid_post'].shape[1]],
+        }
+
+    stats = ds.map_batches(get_batch_scalar).sum()
+
+
+    scaled_model_dim = np.sqrt(runner_cfg.MODEL.D_MODEL)
+    x_mean_l2 = stats['sum(resid_post_norm_sum)'] / stats['sum(resid_post_norm_count)']
+
+    X_SCALAR = scaled_model_dim / x_mean_l2
+
+    return scaled_model_dim, x_mean_l2, X_SCALAR
+
+
+def scale_x(batch, X_SCALAR):
+
+    batch['resid_post'] = X_SCALAR * batch['resid_post']
+
+    return batch
 
 
 
-def train_loop_per_worker(ray_cfg, train_ds):
+
+def train_loop_per_worker(ray_cfg, **kwargs):
+
+    ray_tune = 'train_ds' in kwargs
 
 
-    # raise NotImplementedError(data)
+    if ray_tune:
+        train_ds = kwargs['train_ds']
+    else:
+        train_ds = ray.train.get_dataset_shard('train')
 
 
 
-    # train_dl = ray.train.get_dataset_shard('train').iter_torch_batches(
-    train_dl = train_ds.iter_torch_batches(
-        batch_size=CONSTANTS.EXPERIMENT.BATCH_SIZE,
-        # local_shuffle_buffer_size=16
-    )
 
-
-    
+    # runner config
     runner_cfg = from_dict(
         RunnerConfig,
         get_config(CONSTANTS.CONFIG_FILEPATH).get('RUNNER', {})
@@ -64,26 +89,59 @@ def train_loop_per_worker(ray_cfg, train_ds):
 
 
 
+
+    if 'scale' in ray_cfg and ray_cfg['scale']:
+        scaled_model_dim, x_mean_l2, X_SCALAR = get_x_scalar(train_ds, runner_cfg)
+        train_ds = train_ds.map_batches(scale_x, X_SCALAR)
+
+
+    # dataloader
+    train_dl = train_ds.iter_torch_batches(
+        batch_size=CONSTANTS.EXPERIMENT.BATCH_SIZE,
+        # local_shuffle_buffer_size=16
+    )
+
+
+
+
+
+    # runner
     runner = AcausalAutoencoderRunner(runner_cfg)
-    loss = runner.fit(train_dl)
+
+    if not ray_tune:
+        runner.model = ray.train.torch.prepare_model(runner.model)
+
+    metrics = runner.fit(train_dl)
+
+    print(metrics)
 
 
-    metrics = {
-        'loss': loss.loss.item(),
-        'error': loss.error.item(),
-        'l1': loss.l1.item(),
-        'l0': loss.l0.item(),
-    }
-    with tempfile.TemporaryDirectory() as temp_checkpoint_dir:
-        torch.save(
-            runner.model.state_dict(),
-            os.path.join(temp_checkpoint_dir, "model.pt")
-        )
-        ray.train.report(
-            metrics,
-            checkpoint=ray.train.Checkpoint.from_directory(temp_checkpoint_dir),
-        )
 
+    # metrics_dict = {
+    #     'loss': metrics.loss,
+    #     'error': metrics.error,
+    #     'l1': metrics.l1,
+    #     'l0': metrics.l0,
+    #     'explained_variance': metrics.explained_variance,
+    #     'dead_neurons/all_tokens': metrics.dead_neurons.all_tokens,
+    #     'dead_neurons/one_token': metrics.dead_neurons.one_token,
+    #     'dead_neurons/no_token': metrics.dead_neurons.no_token,
+    #     'n_tokens': runner.num_tokens_processed,
+    # }
+    # with tempfile.TemporaryDirectory() as temp_checkpoint_dir:
+
+    #     torch.save(
+    #         {'epoch': 0, 'model': runner.model.state_dict()},
+    #         os.path.join(temp_checkpoint_dir, "model.pt")
+    #     )
+    #     ray.train.report(
+    #         metrics_dict,
+    #         checkpoint=ray.train.Checkpoint.from_directory(temp_checkpoint_dir),
+    #     )
+
+    # metrics_dict['should_checkpoint'] = True
+
+    # return metrics_dict
 
 
 
