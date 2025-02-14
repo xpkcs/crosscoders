@@ -1,10 +1,14 @@
 boto3
 deepspeed
 einops
+hyperopt
 lightning
+nnsight
 numpy
+omegaconf
 ray[default,data,train,tune]
 torch
+torch_tb_profiler
 tqdm
 
 sae-lens
