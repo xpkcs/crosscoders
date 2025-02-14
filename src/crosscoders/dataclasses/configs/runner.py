@@ -71,14 +71,14 @@ class RunnerConfig(DataclassABC):
 
     MODEL: ModelConfig
 
-    LOSS: Optional[LossConfig] = None
+    LOSS: Optional[LossConfig] = None   # will be set in post init
 
     OPTIMIZER: OptimizerConfig = field(default_factory=OptimizerConfig)
 
 
     def __post_init__(self):
 
-        if self.LOSS != MISSING:
+        if not self.LOSS:
             match self.MODEL.CAUSALITY:
                 case 'acausal':
                     self.LOSS = AcausalLossConfig()
