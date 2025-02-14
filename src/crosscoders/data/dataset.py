@@ -49,12 +49,13 @@ class TinyStoriesRayDataset:
                     num_cpus=1
                 )
 
-                if CONSTANTS.EXPERIMENT.MAX_TOKENS:
-                    ds = ds.limit(CONSTANTS.EXPERIMENT.MAX_TOKENS)
 
             case 'activations':
                 ds = ray.data.read_parquet(get_s3_keys(self.bucket_name, self.s3_prefix))
-                ds = ds.limit(CONSTANTS.EXPERIMENT.MAX_TOKENS)
+
+
+        if CONSTANTS.EXPERIMENT.MAX_TOKENS:
+            ds = ds.limit(CONSTANTS.EXPERIMENT.MAX_TOKENS)
 
 
         return ds
