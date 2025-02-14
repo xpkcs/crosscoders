@@ -12,7 +12,7 @@ from crosscoders.dataclasses.configs.runner import ModelConfig
 
 
 
-class AcausalAutoencoder(AutoencoderABC, torch.nn.Module):
+class AcausalAutoencoder(AutoencoderABC):
 
     def __init__(self, cfg: ModelConfig):
 

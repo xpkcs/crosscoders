@@ -3,6 +3,8 @@
 
 
 from abc import abstractmethod
+
+import torch
 # from typing import Any, Callable, List, Literal, Optional, Tuple, TypeVar, Union, overload
 
 
@@ -12,10 +14,16 @@ from crosscoders.dataclasses.configs.runner import ModelConfig
 
 
 
-class AutoencoderABC(BaseABC):
+class AutoencoderABC(torch.nn.Module):
 
-    cfg: ModelConfig
-    
+    def __init__(self, cfg: ModelConfig):
+
+        super().__init__()
+
+        self.cfg = cfg
+
+
+
 
     # def __init__(self, cfg: ModelConfig):
 
