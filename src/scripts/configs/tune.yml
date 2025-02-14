@@ -1,0 +1,9 @@
+
+
+GLOBALS:
+  EXPERIMENT:
+    BATCH_SIZE: 8192
+
+RUNNER:
+  MODEL:
+    CAUSALITY: acausal
