@@ -35,10 +35,10 @@ class AcausalLoss(LossABC):
         # ).mean()
 
         reconstruction_error = (x - x_hat).pow(2).sum(dim=(-2, -1)).mean()
+        # reconstruction_error = (x - x_hat).pow(2).mean(-1).sum(dim=-1).mean()
         # reconstruction_error = (x - x_hat).norm(dim=-1).sum(dim=-1).mean()
-        
+
         # reconstruction_error = (x - x_hat).norm(dim=-1).mean()
-        
 
 
         # feature_decoder_norms = einops.reduce(
@@ -52,20 +52,51 @@ class AcausalLoss(LossABC):
         #     '... d_coder , d_coder -> ...'
         # ).mean()
 
-        l1 = (x_enc.abs() @ W_dec.norm(dim=-1).sum(dim=-1)).mean()
         # l1 = x_enc.norm(p=1, dim=-1).mean()
+        l1 = (x_enc.abs() @ W_dec.norm(dim=-1).sum(dim=-1)).mean()
 
 
         l0 = (x_enc > 0).sum(-1).to(CONSTANTS.EXPERIMENT.HARDWARE.dtype).mean()
 
 
-        loss = reconstruction_error + self.cfg.L1_COEFFICIENT * l1
+        loss = reconstruction_error + self.cfg.lambda_s * l1
 
 
         return loss, LossMetrics(
             loss=loss.item(),
             error=reconstruction_error.item(),
             l1=l1.item(),
+            l0=l0.item(),
+            explained_variance=self.explained_variance(x, x_hat),
+            dead_neurons=self.dead_neurons(x_enc)
+        )
+
+
+class AcausalLossJumpReLU(LossABC):
+
+    def __call__(self, x: torch.Tensor, x_hat: torch.Tensor, x_enc: torch.Tensor, W_dec: torch.Tensor, t: torch.Tensor) -> LossMetrics:
+
+        reconstruction_error = (x - x_hat).pow(2).sum(dim=(-2, -1)).mean()
+        # reconstruction_error = (x - x_hat).pow(2).mean(-1).sum(-1).mean()
+
+        W_dec_norm = W_dec.norm(dim=-1).sum(dim=-1)
+
+        l1 = torch.nn.functional.tanh(self.cfg.c * x_enc.abs() * W_dec_norm).sum(-1).mean()
+
+        lp = (torch.nn.functional.relu(torch.exp(t) - x_enc) * W_dec_norm).sum(-1).mean()
+
+        l0 = (x_enc > 0).sum(-1).to(CONSTANTS.EXPERIMENT.HARDWARE.dtype).mean()
+
+
+        # loss = reconstruction_error + self.cfg.L1_COEFFICIENT * l1
+        loss = reconstruction_error + self.cfg.lambda_s * l1 + self.cfg.lambda_p * lp
+
+
+        return loss, LossMetrics(
+            loss=loss.item(),
+            error=reconstruction_error.item(),
+            l1=l1.item(),
+            lp=lp.item(),
             l0=l0.item(),
             explained_variance=self.explained_variance(x, x_hat),
             dead_neurons=self.dead_neurons(x_enc)

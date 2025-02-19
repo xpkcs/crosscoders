@@ -16,20 +16,13 @@ import torch
 
 @dataclass(repr=False)
 class LossConfig(DataclassABC):
-    
+
     pass
     # L1_COEFFICIENT: float = 8e-5
-    L1_COEFFICIENT: float = 1.
-
-
-@dataclass(repr=False)
-class AcausalLossConfig(LossConfig):
-
-    # L1_COEFFICIENT: float = 8e-5
-    L1_COEFFICIENT: float = 1.
-
-
-
+    # L1_COEFFICIENT: float = 1.
+    c: float = 4
+    lambda_s: float = 10
+    lambda_p: float = 3e-6
 
 
 @dataclass(repr=False)
@@ -38,15 +31,12 @@ class ModelConfig(DataclassABC):
     CAUSALITY: Literal['acausal', 'weak', 'strict']
     LOCALITY: Literal['global', 'local', 'skip'] = 'global'
 
+    ACTIVATION_FUNCTION: Literal['relu', 'jumprelu'] = 'jumprelu'
+    eps: float = 2
+
     N_LAYERS: int = 12
-    # n_layers_input: int = 1
-    # n_layers_predict: int = 11
     D_MODEL: int = 768
     D_CODER: int = 16384
-
-    # hardware
-    # dtype: str | torch.dtype = torch.float32
-    # device: str | torch.device = 'cuda'
 
     HARDWARE: HardwareConfig = field(default_factory=HardwareConfig)
 
@@ -78,9 +68,9 @@ class RunnerConfig(DataclassABC):
 
     def __post_init__(self):
 
-        if not self.LOSS:
+        if not self.LOSS or isinstance(self.LOSS, dict):
             match self.MODEL.CAUSALITY:
                 case 'acausal':
-                    self.LOSS = AcausalLossConfig()
+                    self.LOSS = LossConfig(**(self.LOSS if self.LOSS else {}))
 
 

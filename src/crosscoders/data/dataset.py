@@ -51,7 +51,10 @@ class TinyStoriesRayDataset:
 
 
             case 'activations':
-                ds = ray.data.read_parquet(get_s3_keys(self.bucket_name, self.s3_prefix))
+                ds = ray.data.read_parquet(
+                    get_s3_keys(self.bucket_name, self.s3_prefix),
+                    ray_remote_args={'num_cpus': 2}
+                )
 
 
         if CONSTANTS.EXPERIMENT.MAX_TOKENS:
@@ -61,11 +64,15 @@ class TinyStoriesRayDataset:
         return ds
 
 
-    def save(self, ds: ray.data.Dataset) -> None:
+    def save(self, ds: ray.data.Dataset, local=False) -> None:
+
+        if local:
+            path = f'local://{CONSTANTS.DATA_DIR}/input/{self.hf_dataset_name}/train'
+        else:
+            path = f's3://{self.bucket_name}/{self.s3_prefix}'
 
         ds.write_parquet(
-            # f'local://{CONSTANTS.DATA_DIR}/input/{self.hf_dataset_name}/train',
-            f's3://{self.bucket_name}/{self.s3_prefix}',
+            path,
             compression='LZ4',
             concurrency=6,
             ray_remote_args={

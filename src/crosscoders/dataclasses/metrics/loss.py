@@ -28,6 +28,7 @@ class LossMetrics(DataclassABC):
 
     error: torch.Tensor
     l1: torch.Tensor
+    lp: torch.Tensor
     l0: torch.Tensor
 
     explained_variance: float

@@ -32,11 +32,20 @@ GLOBALS:
 RUNNER:
   MODEL:
     CAUSALITY: acausal
+    ACTIVATION_FUNCTION: jumprelu
+    # eps: 2
+
+  # LOSS:
+    # L1_COEFFICIENT: 0.2
+    # L1_COEFFICIENT: 2
+    # lambda_s: 10
+    # lambda_p: 
+    # c: 4
 
 
-
-  OPTIMIZER:
-    # optimizer: torch.optim.AdamW
-    # optimizer: ${resolve_torch_optimizer:Adam}
-    parameters:
-      lr: 0.002279
+  # OPTIMIZER:
+  #   # optimizer: torch.optim.AdamW
+  #   # optimizer: ${resolve_torch_optimizer:Adam}
+  #   parameters:
+      # lr: 0.002279
+      # lr: 0.0002

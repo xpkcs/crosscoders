@@ -35,18 +35,21 @@ import tempfile
 
 import torch.amp, torch.optim
 import datetime, numpy as np
+import logging
+
+logger = logging.getLogger()
 
 
 def get_x_scalar(ds, runner_cfg):
-        
-    def get_batch_scalar(batch):
+
+    def get_batch_expected_norm(batch):
 
         return {
             'resid_post_norm_sum': [np.linalg.norm(batch['resid_post'], ord=2, axis=-1).sum()],
             'resid_post_norm_count': [batch['resid_post'].shape[0] * batch['resid_post'].shape[1]],
         }
 
-    stats = ds.map_batches(get_batch_scalar).sum()
+    stats = ds.map_batches(get_batch_expected_norm, zero_copy_batch=True).sum()
 
 
     scaled_model_dim = np.sqrt(runner_cfg.MODEL.D_MODEL)
@@ -88,12 +91,13 @@ def train_loop_per_worker(ray_cfg, **kwargs):
     update_dataclass(runner_cfg, ray_cfg)
 
 
+    logger.info(runner_cfg)
+    print(runner_cfg)
 
-
-    if 'scale' in ray_cfg and ray_cfg['scale']:
-        scaled_model_dim, x_mean_l2, X_SCALAR = get_x_scalar(train_ds, runner_cfg)
-        train_ds = train_ds.map_batches(scale_x, X_SCALAR)
-
+    # if 'scale' in ray_cfg and ray_cfg['scale']:
+    # if ray_cfg.get('scale', False):
+    #     scaled_model_dim, x_mean_l2, X_SCALAR = get_x_scalar(train_ds, runner_cfg)
+    #     train_ds = train_ds.map_batches(scale_x, X_SCALAR)
 
     # dataloader
     train_dl = train_ds.iter_torch_batches(
@@ -111,7 +115,8 @@ def train_loop_per_worker(ray_cfg, **kwargs):
     if not ray_tune:
         runner.model = ray.train.torch.prepare_model(runner.model)
 
-    metrics = runner.fit(train_dl)
+    logger.info(str({k: kwargs.get(k) for k in ('X_SCALAR',) if k in kwargs and kwargs.get(k) is not None}))
+    metrics = runner.fit(train_dl, **{k: kwargs.get(k) for k in ('X_SCALAR',) if k in kwargs})
 
     print(metrics)
 
