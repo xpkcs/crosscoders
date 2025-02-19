@@ -32,7 +32,7 @@ class ExperimentConfig(DataclassABC):
 
 
     def __post_init__(self, **kwargs):
-        
+
         if self.MAX_TOKENS is None:
             self.MAX_TOKENS = self.BATCH_SIZE * self.MAX_BATCHES
 
@@ -42,7 +42,7 @@ class GlobalsConfig(DataclassABC):
 
     PROJECT_ROOT_DIR: str
     CONFIG_FILEPATH: str
-    # DATA_DIR: str
+    DATA_DIR: str = '/home/ec2-user/crosscoders/data'
 
     EXPERIMENT: ExperimentConfig = field(default_factory=ExperimentConfig)
 
