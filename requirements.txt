@@ -7,6 +7,8 @@ nnsight
 numpy
 omegaconf
 ray[default,data,train,tune]
+s3fs
+tensorboard
 torch
 torch_tb_profiler
 tqdm
