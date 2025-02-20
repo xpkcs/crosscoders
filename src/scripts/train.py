@@ -16,7 +16,7 @@ import numpy as np
 import torch
 
 
-# from crosscoders.data.preprocessing import TokenToLatents
+# from crosscoders.data.preprocessing import TokenToActivations
 from crosscoders.autoencoders.acausal.loss import AcausalLoss
 from crosscoders.autoencoders.acausal.model import AcausalAutoencoder
 from crosscoders.autoencoders.acausal.runner import AcausalAutoencoderRunner
@@ -151,7 +151,7 @@ def train_loop_per_worker(ray_cfg, **kwargs):
 
 
 def main():
-    
+
     train_ds = TinyStoriesRayDataset().load('activations')
 
     print(train_ds)
