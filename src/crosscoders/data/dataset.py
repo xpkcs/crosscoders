@@ -7,7 +7,7 @@ import ray
 import ray.data
 
 from crosscoders.constants import CONSTANTS
-from crosscoders.data.preprocessing import TokenToLatents
+from crosscoders.data.preprocessing import TokenToActivations
 
 
 
@@ -37,12 +37,12 @@ class TinyStoriesRayDataset:
             case 'tokens':
                 hf_dataset = datasets.load_dataset(self.hf_dataset_name, streaming=True)
                 ds = ray.data.from_huggingface(hf_dataset[self.slice], concurrency=1)
-                
+
                 if CONSTANTS.EXPERIMENT.MAX_RECORDS:
                     ds = ds.limit(CONSTANTS.EXPERIMENT.MAX_RECORDS)
-                
+
                 ds = ds.map_batches(
-                    TokenToLatents,
+                    TokenToActivations,
                     batch_size=CONSTANTS.EXPERIMENT.BATCH_SIZE,
                     concurrency=1,
                     num_gpus=1,
