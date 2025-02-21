@@ -26,12 +26,13 @@ def get_final_decay_scheduler(optimizer, total_steps, decay_start_fraction=0.8):
 
     # cite: claude
     def lr_lambda(current_step):
-        decay_start_step = int(total_steps * decay_start_fraction)
+        max_batches = CONSTANTS.EXPERIMENT.MAX_TOKENS // CONSTANTS.EXPERIMENT.BATCH_SIZE + 1
+        decay_start = int(max_batches * decay_start_fraction)
 
-        if current_step < decay_start_step:
+        if current_step < decay_start:
             return 1.0
         else:
-            decay_progress = (current_step - decay_start_step) / (total_steps - decay_start_step)
+            decay_progress = (current_step - decay_start) / (total_steps - decay_start)
             return 1.0 - decay_progress
 
     return torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda)
