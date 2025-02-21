@@ -173,8 +173,8 @@ cython_debug/
 
 /data
 /data/**
-*logs*
-*logs*/**
+*log*
+*log*/**
 
 conda/
 conda/**
