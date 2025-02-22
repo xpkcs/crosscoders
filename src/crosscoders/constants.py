@@ -35,8 +35,12 @@ def load_constants():
 
 
     try:
-        cfg = get_config(resolve_path(os.environ['CONFIG_FILEPATH']))
-        cfg['GLOBALS'] |= {e: resolve_path(os.environ[e]) for e in REQUIRED_ENV_VARS}
+        from pathlib import Path
+        # cfg = get_config(resolve_path(os.environ['CONFIG_FILEPATH']))
+        cfg = get_config(resolve_path(os.environ.get('CONFIG_FILEPATH', str(Path(__file__).parent.parent / 'scripts/configs/train.yml'))))
+        # cfg['GLOBALS'] |= {e: resolve_path(os.environ[e]) for e in REQUIRED_ENV_VARS}
+
+        pass
 
     except KeyError as e:
         raise TypeError(f'Missing required env var: {e.args[0]}')
