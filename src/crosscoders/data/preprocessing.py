@@ -18,7 +18,8 @@ from crosscoders.dataclasses.configs.globals import HardwareConfig
 
 class TokenToActivations:
 
-    def __init__(self, model_names: Iterable[str] = ('gpt2-small', 'gpt-neo-125M')):
+    # def __init__(self, model_names: Iterable[str] = ('gpt2-small', 'gpt-neo-125M')):
+    def __init__(self, model_names: Iterable[str] = ('tiny-stories-33M',)):
 
         self.models = {
             mn: HookedTransformer.from_pretrained(mn)
@@ -26,7 +27,9 @@ class TokenToActivations:
         }
 
         # self.latent_names = ('attn_out', 'resid_mid', 'mlp_out', 'resid_post')
-        self.latent_names = ('resid_post',)
+        # self.latent_names = ('resid_post',)
+        # self.latent_names = ('resid_mid', 'mlp_out')
+        self.latent_names = ('ln2.normalized', 'mlp_out', 'resid_post')
 
         torch.set_grad_enabled(False)
 

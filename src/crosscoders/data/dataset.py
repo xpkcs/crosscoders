@@ -10,6 +10,7 @@ import numpy as np
 from crosscoders.constants import CONSTANTS
 from crosscoders.data.preprocessing import TokenToActivations
 
+import numpy as np
 
 
 def get_s3_keys(bucket_name, key_prefix):
@@ -46,6 +47,8 @@ class TinyStoriesRayDataset:
                 ds = ds.map_batches(
                     TokenToActivations,
                     batch_size=CONSTANTS.EXPERIMENT.BATCH_SIZE,
+                    # concurrency=(1, 2),
+                    # num_gpus=0.5,
                     concurrency=1,
                     num_gpus=1,
                     num_cpus=1
@@ -53,7 +56,7 @@ class TinyStoriesRayDataset:
 
 
             case 'activations':
-                keys = get_s3_keys(self.bucket_name, self.s3_prefix)[:1000]
+                keys = get_s3_keys(self.bucket_name, self.s3_prefix)
                 self.rng.shuffle(keys)
 
                 ds = ray.data.read_parquet_bulk(

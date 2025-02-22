@@ -16,7 +16,7 @@ GLOBALS:
 
     BATCH_SIZE: 16384
     # MAX_BATCHES:
-    MAX_TOKENS: 2000000
+    MAX_TOKENS: 10000000
     # MAX_TOKENS: 1000
 
 
@@ -30,10 +30,17 @@ GLOBALS:
 
 
 RUNNER:
+
+  INPUT_NAME: tiny-stories-33M.ln2.normalized
+  OUTPUT_NAME: tiny-stories-33M.mlp_out
+
+
   MODEL:
     CAUSALITY: acausal
     ACTIVATION_FUNCTION: jumprelu
     # eps: 2
+
+    N_LAYERS: 4
 
   # LOSS:
     # L1_COEFFICIENT: 0.2
