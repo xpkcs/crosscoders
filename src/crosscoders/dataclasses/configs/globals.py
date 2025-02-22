@@ -37,11 +37,14 @@ class ExperimentConfig(DataclassABC):
             self.MAX_TOKENS = self.BATCH_SIZE * self.MAX_BATCHES
 
 
+from pathlib import Path
+
+
 @dataclass(repr=False)
 class GlobalsConfig(DataclassABC):
 
-    PROJECT_ROOT_DIR: str
-    CONFIG_FILEPATH: str
+    PROJECT_ROOT_DIR: str = str(Path(__file__).parent.parent.parent.parent)
+    CONFIG_FILEPATH: str = str(Path(__file__).parent.parent.parent / 'scripts/configs/train.yml')
     DATA_DIR: str = '/home/ec2-user/crosscoders/data'
 
     EXPERIMENT: ExperimentConfig = field(default_factory=ExperimentConfig)
