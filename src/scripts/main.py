@@ -48,6 +48,10 @@ def main(**kwargs: dict) -> None:
 
     # xc.configs.utils.update_dataclass(CONSTANTS, cfg)
 
+    # ray.data._internal.datasource.parquet_datasource.NUM_CPUS_FOR_META_FETCH_TASK = 4
+    # ray.data.datasource.parquet_meta_provider.RETRY_MAX_ATTEMPTS_FOR_META_FETCH_TASK = 256
+    # ray.data.datasource.parquet_meta_provider.RETRY_MAX_BACKOFF_S_FOR_META_FETCH_TASK = 256
+
 
     ray.init(
         runtime_env=RuntimeEnv(
@@ -58,6 +62,8 @@ def main(**kwargs: dict) -> None:
             # py_executable_args=["-Xfrozen_modules=off"]
         )
     )
+
+
 
 
     from scripts import data, train   # , inference
