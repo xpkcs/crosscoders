@@ -83,8 +83,8 @@ class TinyStoriesRayDataset:
 
         ds.write_parquet(
             path,
-            compression='LZ4',
-            concurrency=6,
+            compression='zstd',
+            # concurrency=6,
             ray_remote_args={
                 'num_cpus': 1
             },
