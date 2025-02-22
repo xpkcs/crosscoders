@@ -8,6 +8,7 @@ import numpy as np
 import torch
 
 from transformer_lens import HookedTransformer
+from transformer_lens.utils import get_act_name
 
 from crosscoders.dataclasses.configs.globals import HardwareConfig
 
@@ -21,10 +22,17 @@ class TokenToActivations:
     # def __init__(self, model_names: Iterable[str] = ('gpt2-small', 'gpt-neo-125M')):
     def __init__(self, model_names: Iterable[str] = ('tiny-stories-33M',)):
 
-        self.models = {
-            mn: HookedTransformer.from_pretrained(mn)
-            for mn in model_names
-        }
+        self.models = {}
+        for mn in model_names:
+            self.models[mn]['model'] = HookedTransformer.from_pretrained(mn)
+            self.models[mn]['hooks'] = [
+                (
+                    get_act_name(ln, layer_idx) if '.' not in ln else get_act_name(ln.split('.')[1], layer_idx, ln.split('.')[0]),
+                    partial(self.store_activation_hook, model_name=mn, latent_name=ln, layer_idx=layer_idx)
+                )
+                for layer_idx in range(self.models[mn]['model'].cfg.n_layers)
+                for ln in self.latent_names
+            ]
 
         # self.latent_names = ('attn_out', 'resid_mid', 'mlp_out', 'resid_post')
         # self.latent_names = ('resid_post',)
@@ -43,24 +51,19 @@ class TokenToActivations:
         }
 
 
-        for mn, model in self.models.items():
-
+        for mn, model_info in self.models.items():
 
             # compose tensors for desired latent_names, add to latents dict
             for ln in self.latent_names:
                 self.out[f'{mn}.{ln}'] = torch.empty(
-                    (*self.out['tokens'].shape, model.cfg.n_layers, model.cfg.d_model),
+                    (*self.out['tokens'].shape, model_info['model'].cfg.n_layers, model_info['model'].cfg.d_model),
                     **HardwareConfig().asdict()
                 )
 
             with torch.inference_mode():
-                _ = model.run_with_hooks(
+                _ = model_info['model'].run_with_hooks(
                     self.out['tokens'],
-                    fwd_hooks=[
-                        (f'blocks.{layer_idx}.hook_{ln}', partial(self.store_activation_hook, model_name=mn, latent_name=ln, layer_idx=layer_idx))
-                        for ln in self.latent_names
-                        for layer_idx in range(model.cfg.n_layers)
-                    ]
+                    fwd_hooks=model_info['hooks']
                 )
 
 
