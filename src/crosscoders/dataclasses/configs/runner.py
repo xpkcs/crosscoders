@@ -65,6 +65,8 @@ class RunnerConfig(DataclassABC):
 
     OPTIMIZER: OptimizerConfig = field(default_factory=OptimizerConfig)
 
+    INPUT_NAME: str = 'resid_post'
+    OUTPUT_NAME: str = 'resid_post'
 
     def __post_init__(self):
 
