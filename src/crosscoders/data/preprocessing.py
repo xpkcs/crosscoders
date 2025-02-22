@@ -72,7 +72,11 @@ class TokenToActivations:
         # convert tensors to cpu/numpy to be serialized for ray comms
         for k in self.out:
             if isinstance(self.out[k], torch.Tensor):
-                self.out[k] = self.out[k].cpu().numpy().astype(np.float32)
+                # TODO: replace this with specified types per key
+                if k == 'tokens':
+                    self.out[k] = self.out[k].cpu().numpy().astype(np.int32)
+                else:
+                    self.out[k] = self.out[k].cpu().numpy().astype(np.float32)
 
 
         out = self.out
