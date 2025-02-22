@@ -61,13 +61,14 @@ class AcausalAutoencoderRunner(AutoencoderRunnerABC):
 
     def training_step(self, batch: Dict[str, torch.Tensor]) -> LossMetrics:
 
-        x = batch['resid_post']
+        x = batch[self.cfg.INPUT_NAME]
         self.num_tokens_processed += x.shape[0]
 
-        x_hat = self.model(x)
+        y = batch[self.cfg.OUTPUT_NAME]
+        y_hat = self.model(x)
         # TODO:
         # loss, metrics = self.loss(x, x_hat, self.model.x_enc, self.model.W_dec)
-        loss, metrics = self.loss(x, x_hat, self.model.x_enc, self.model.W_dec, self.model.t)
+        loss, metrics = self.loss(y, y_hat, self.model.x_enc, self.model.W_dec, self.model.t)
         loss.backward()
 
         total_grad_norm = torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1)
@@ -93,7 +94,7 @@ class AcausalAutoencoderRunner(AutoencoderRunnerABC):
 
         for batch_idx, batch in enumerate(dl):
 
-            batch['resid_post'] = kwargs.get('X_SCALAR', 1.) * batch['resid_post']
+            batch[self.cfg.INPUT_NAME] = kwargs.get('X_SCALAR', 1.) * batch[self.cfg.INPUT_NAME]
 
             metrics = self.training_step(batch)
             metrics_dict = {
