@@ -5,6 +5,7 @@ import boto3
 import datasets
 import ray
 import ray.data
+import numpy as np
 
 from crosscoders.constants import CONSTANTS
 from crosscoders.data.preprocessing import TokenToActivations
@@ -17,18 +18,19 @@ def get_s3_keys(bucket_name, key_prefix):
 
     return [
         f's3://{obj.bucket_name}/{obj.key}'
-        for obj in bucket.objects.filter(Prefix=key_prefix, Marker=key_prefix)
+        for obj in bucket.objects.filter(Prefix=key_prefix, Marker=key_prefix, Delimiter='/')
     ]
 
 
 class TinyStoriesRayDataset:
 
-    def __init__(self, hf_dataset_name: str = 'roneneldan/TinyStories', slice: str = 'train', bucket_name: str = 'crosscoders') -> None:
+    def __init__(self, hf_dataset_name: str = 'roneneldan/TinyStories', slice: str = 'train', s3_prefix: str = '', bucket_name: str = 'crosscoders') -> None:
 
         self.hf_dataset_name = hf_dataset_name
         self.slice = slice
-        self.s3_prefix = f'input/{self.hf_dataset_name}/train/'
+        self.s3_prefix = f'input/{self.hf_dataset_name}/train/{s3_prefix}'
         self.bucket_name = bucket_name
+        self.rng = np.random.default_rng(seed=314159)
 
 
     def load(self, which: Literal['tokens', 'activations'] = 'tokens') -> ray.data.Dataset:
@@ -51,9 +53,14 @@ class TinyStoriesRayDataset:
 
 
             case 'activations':
-                ds = ray.data.read_parquet(
-                    get_s3_keys(self.bucket_name, self.s3_prefix),
-                    ray_remote_args={'num_cpus': 2}
+                keys = get_s3_keys(self.bucket_name, self.s3_prefix)[:1000]
+                self.rng.shuffle(keys)
+
+                ds = ray.data.read_parquet_bulk(
+                    keys,
+                    # concurrency=1,
+                    ray_remote_args={'num_cpus': 4},
+                    shuffle=ray.data.FileShuffleConfig(seed=314159)
                 )
 
 
