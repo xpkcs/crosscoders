@@ -1,4 +1,5 @@
 boto3
+dask[distributed]
 deepspeed
 einops
 hyperopt
