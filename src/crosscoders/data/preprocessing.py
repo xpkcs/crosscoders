@@ -22,8 +22,14 @@ class TokenToActivations:
     # def __init__(self, model_names: Iterable[str] = ('gpt2-small', 'gpt-neo-125M')):
     def __init__(self, model_names: Iterable[str] = ('tiny-stories-33M',)):
 
+        # self.latent_names = ('attn_out', 'resid_mid', 'mlp_out', 'resid_post')
+        # self.latent_names = ('resid_post',)
+        # self.latent_names = ('resid_mid', 'mlp_out')
+        self.latent_names = ('ln2.normalized', 'mlp_out', 'resid_post')
+
         self.models = {}
         for mn in model_names:
+            self.models[mn] = {}
             self.models[mn]['model'] = HookedTransformer.from_pretrained(mn)
             self.models[mn]['hooks'] = [
                 (
@@ -34,17 +40,12 @@ class TokenToActivations:
                 for ln in self.latent_names
             ]
 
-        # self.latent_names = ('attn_out', 'resid_mid', 'mlp_out', 'resid_post')
-        # self.latent_names = ('resid_post',)
-        # self.latent_names = ('resid_mid', 'mlp_out')
-        self.latent_names = ('ln2.normalized', 'mlp_out', 'resid_post')
-
         torch.set_grad_enabled(False)
 
 
     def __call__(self, batch: Dict[str, np.ndarray]) -> Dict[str, np.ndarray]:
 
-        tokenizer_model = next(iter(self.models.values()))
+        tokenizer_model = next(iter(self.models.values()))['model']
 
         self.out = {
             'tokens': tokenizer_model.to_tokens(batch['text'].tolist())

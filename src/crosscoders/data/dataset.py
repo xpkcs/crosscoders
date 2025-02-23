@@ -85,6 +85,7 @@ class TinyStoriesRayDataset:
             path,
             compression='zstd',
             # concurrency=6,
+            # min_rows_per_file=8192,
             ray_remote_args={
                 'num_cpus': 1
             },
