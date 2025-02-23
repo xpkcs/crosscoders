@@ -16,7 +16,7 @@ GLOBALS:
 
     BATCH_SIZE: 16384
     # MAX_BATCHES:
-    MAX_TOKENS: 10000000
+    MAX_TOKENS: 1000000
     # MAX_TOKENS: 1000
 
 
@@ -37,10 +37,12 @@ RUNNER:
 
   MODEL:
     CAUSALITY: acausal
-    ACTIVATION_FUNCTION: jumprelu
+    ACTIVATION_FUNCTION: relu
     # eps: 2
 
     N_LAYERS: 4
+    D_CODER: 24576
+
 
   # LOSS:
     # L1_COEFFICIENT: 0.2
