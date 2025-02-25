@@ -14,9 +14,9 @@ GLOBALS:
     # MAX_BATCHES: 10
 
 
-    BATCH_SIZE: 16384
+    BATCH_SIZE: 25000
     # MAX_BATCHES:
-    MAX_TOKENS: 1000000
+    MAX_TOKENS: 10000000
     # MAX_TOKENS: 1000
 
 
@@ -35,13 +35,15 @@ RUNNER:
   OUTPUT_NAME: tiny-stories-33M.mlp_out
 
 
-  MODEL:
-    CAUSALITY: acausal
-    ACTIVATION_FUNCTION: relu
+  # MODEL:
+    # CAUSALITY: acausal
+    # ACTIVATION_FUNCTION: relu
     # eps: 2
 
-    N_LAYERS: 4
-    D_CODER: 24576
+    # model
+
+    # N_LAYERS: 4
+    # D_CODER: 24576
 
 
   # LOSS:

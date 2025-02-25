@@ -1,6 +1,7 @@
 
 
 from dataclasses import dataclass, asdict, field
+import math
 from typing import Optional
 import torch
 
@@ -19,10 +20,10 @@ class HardwareConfig(DataclassABC):
 class ExperimentConfig(DataclassABC):
 
     BATCH_SIZE: int # = 8192
+    MAX_TOKENS: int = 100000000
     MAX_RECORDS: Optional[int] = None
     # MAX_EPOCHS: int = 1
-    MAX_BATCHES: Optional[int] = 1000000
-    MAX_TOKENS: Optional[int] = None
+    MAX_BATCHES: Optional[int] = None
 
     # NUM_GPUS_ACTIVATION: float | int = 0.4
     NUM_GPUS: float | int = 1
@@ -33,8 +34,10 @@ class ExperimentConfig(DataclassABC):
 
     def __post_init__(self, **kwargs):
 
-        if self.MAX_TOKENS is None:
-            self.MAX_TOKENS = self.BATCH_SIZE * self.MAX_BATCHES
+        # if self.MAX_TOKENS is None:
+        #     self.MAX_TOKENS = self.BATCH_SIZE * self.MAX_BATCHES
+
+        self.MAX_BATCHES = math.ceil(self.MAX_TOKENS / self.BATCH_SIZE)
 
 
 from pathlib import Path

@@ -23,8 +23,9 @@ from crosscoders.autoencoders.acausal.runner import AcausalAutoencoderRunner
 from crosscoders.dataclasses.configs.runner import LossConfig, ModelConfig
 
 from crosscoders import CONSTANTS
-from crosscoders.dataclasses.configs.runner import RunnerConfig
-from crosscoders.data.dataset import TinyStoriesRayDataset
+# from crosscoders.dataclasses.configs.runner import RunnerConfig
+from crosscoders.autoencoders.runner import Runner, RunnerConfig
+from crosscoders.data.dataset import TinyStoriesRayDataset, get_s3_keys
 from crosscoders.utils import from_dict, get_config, update_dataclass
 from torch.utils.tensorboard import SummaryWriter
 
@@ -85,13 +86,14 @@ def train_loop_per_worker(ray_cfg, **kwargs):
     # runner config
     runner_cfg = from_dict(
         RunnerConfig,
-        get_config(CONSTANTS.CONFIG_FILEPATH).get('RUNNER', {})
+        get_config(CONSTANTS.CONFIG_FILEPATH).get('RUNNER', {}) | ray_cfg
     )
 
-    update_dataclass(runner_cfg, ray_cfg)
+
+    # update_dataclass(runner_cfg, ray_cfg)
 
 
-    logger.info(runner_cfg)
+    # logger.info(runner_cfg)
     print(runner_cfg)
 
     # if 'scale' in ray_cfg and ray_cfg['scale']:
@@ -102,7 +104,8 @@ def train_loop_per_worker(ray_cfg, **kwargs):
     # dataloader
     train_dl = train_ds.iter_torch_batches(
         batch_size=CONSTANTS.EXPERIMENT.BATCH_SIZE,
-        # local_shuffle_buffer_size=16
+        # local_shuffle_buffer_size=10 * CONSTANTS.EXPERIMENT.BATCH_SIZE,
+        # local_shuffle_seed=314159
     )
 
 
@@ -110,7 +113,7 @@ def train_loop_per_worker(ray_cfg, **kwargs):
 
 
     # runner
-    runner = AcausalAutoencoderRunner(runner_cfg)
+    runner = Runner(runner_cfg)
 
     if not ray_tune:
         runner.model = ray.train.torch.prepare_model(runner.model)
@@ -120,6 +123,8 @@ def train_loop_per_worker(ray_cfg, **kwargs):
 
     print(metrics)
 
+
+    runner.cleanup()
 
 
     # metrics_dict = {
@@ -176,10 +181,10 @@ def main():
             use_gpu=True,
             resources_per_worker={'CPU': 2, 'GPU': 1}
         ),
-        # run_config = RunConfig(
-        #     checkpoint_config=CheckpointConfig(num_to_keep=1),
-        #     storage_path="s3://..."
-        # )
+        # run_config = ray.train.RunConfig(
+        #     checkpoint_config=ray.train.CheckpointConfig(num_to_keep=1),
+        #     storage_path='s3://crosscoders/ray/tiny-stories-33M'
+        # ),
         datasets={'train': train_ds}
     )
     result: ray.train.Result = trainer.fit()

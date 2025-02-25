@@ -104,3 +104,24 @@ def dataclass_repr(dc, indent=0):
         lines.append(f"{spacer}    {f.name} = {value_repr.lstrip()},")
     lines.append(f"{spacer})")
     return "\n".join(lines)
+
+
+def dataclass_to_dict(dc):
+
+    out = {}
+    for f in fields(dc):
+        value = getattr(dc, f.name)
+        out[f.name] = value if not is_dataclass(value) else dataclass_to_dict(value)
+
+
+    return out
+
+def flatten_dict(nested_dict, parent_key='', sep='.'):
+    items = []
+    for k, v in nested_dict.items():
+        new_key = parent_key + sep + k if parent_key else k
+        if isinstance(v, dict):
+            items.extend(flatten_dict(v, new_key, sep=sep).items())
+        else:
+            items.append((new_key, v))
+    return dict(items)

@@ -14,7 +14,7 @@ from crosscoders.abc.dataclass import DataclassABC
 
 @dataclass(repr=False)
 class DeadNeuronMetrics(DataclassABC):
-    
+
     all_tokens: float
     one_token : float
     no_token  : float
@@ -26,17 +26,17 @@ class LossMetrics(DataclassABC):
 
     loss: torch.Tensor       # only required output to run backward()
 
-    error: torch.Tensor
-    l1: torch.Tensor
-    lp: torch.Tensor
-    l0: torch.Tensor
-
     explained_variance: float
     dead_neurons: DeadNeuronMetrics
 
+    error: torch.Tensor
+    l0: torch.Tensor
+    l1: torch.Tensor
+
+
 
     # def asdict(self):
-        
+
     #     return {_.item() for _ in vars(self)}
 
 # class LossOutput(NamedTuple):

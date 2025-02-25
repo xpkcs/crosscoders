@@ -36,9 +36,9 @@ def load_constants():
 
     try:
         from pathlib import Path
-        # cfg = get_config(resolve_path(os.environ['CONFIG_FILEPATH']))
-        cfg = get_config(resolve_path(os.environ.get('CONFIG_FILEPATH', str(Path(__file__).parent.parent / 'scripts/configs/train.yml'))))
-        # cfg['GLOBALS'] |= {e: resolve_path(os.environ[e]) for e in REQUIRED_ENV_VARS}
+        cfg = get_config(resolve_path(os.environ['CONFIG_FILEPATH']))
+        # cfg = get_config(resolve_path(os.environ.get('CONFIG_FILEPATH', str(Path(__file__).parent.parent.parent / 'scripts/configs/train.yml'))))
+        cfg['GLOBALS'] |= {e: resolve_path(os.environ[e]) for e in REQUIRED_ENV_VARS}
 
         pass
 
