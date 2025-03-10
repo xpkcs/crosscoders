@@ -2,56 +2,59 @@
 
 
 
-from dataclasses import MISSING, dataclass, field
 import gc
-from typing import Any, Dict, Literal
 import os
 import tempfile
-import numpy as np
-import torch
-import ray, ray.train, ray.tune
+from dataclasses import MISSING, dataclass, field
+from typing import Any, Dict, Literal
 
+import numpy as np
+import ray
+import ray.train
+import ray.tune
+import torch
 
 # from crosscoders import CONSTANTS
 from crosscoders.abc import AutoencoderRunnerABC
 from crosscoders.abc.dataclass import DataclassABC
-from crosscoders.autoencoders.schedulers import get_scheduler_lambda_s, get_scheduler_lr
-from crosscoders.constants import get_constants
-from crosscoders.dataclasses.configs.runner import OptimizerConfig
+from crosscoders.autoencoders.baseline import (BaselineAutoencoder,
+                                               BaselineModelConfig)
+from crosscoders.autoencoders.jumprelu import (JumpReLUAutoencoder,
+                                               JumpReLUModelConfig)
+from crosscoders.autoencoders.schedulers import (get_scheduler_lambda_s,
+                                                 get_scheduler_lr)
+from crosscoders.config import get_config
+from crosscoders.dataclasses.configs.runner import (OptimizerConfig,
+                                                    RunnerConfig)
 from crosscoders.dataclasses.metrics.loss import LossMetrics
-
 from crosscoders.utils import dataclass_to_dict, flatten_dict
 
-from crosscoders.autoencoders.baseline import BaselineAutoencoder, BaselineModelConfig
-from crosscoders.autoencoders.jumprelu import JumpReLUAutoencoder, JumpReLUModelConfig
-
-from crosscoders.constants import get_constants
-CONSTANTS = get_constants()
+CONSTANTS = get_config()
 
 
-@dataclass(repr=False)
-class RunnerConfig(DataclassABC):
+# @dataclass(repr=False)
+# class RunnerConfig(DataclassABC):
 
-    # model: Literal['baseline', 'jumprelu'] = 'baseline'
-    recipe: str = 'baseline'
-    model: Any = None
+#     # model: Literal['baseline', 'jumprelu'] = 'baseline'
+#     recipe: str = 'baseline'
+#     model: Any = None
 
-    OPTIMIZER: OptimizerConfig = field(default_factory=OptimizerConfig)
+#     OPTIMIZER: OptimizerConfig = field(default_factory=OptimizerConfig)
 
-    INPUT_NAME: str = 'resid_post'
-    OUTPUT_NAME: str = 'resid_post'
+#     INPUT_NAME: str = 'resid_post'
+#     OUTPUT_NAME: str = 'resid_post'
 
-    X_SCALAR: float = 1.
-    Y_SCALAR: float = 1.
+#     X_SCALAR: float = 1.
+#     Y_SCALAR: float = 1.
 
 
-    def __post_init__(self):
+#     def __post_init__(self):
 
-        match self.recipe:
-            case 'baseline':
-                self.model = BaselineModelConfig(lambda_s=2)
-            case 'jumprelu':
-                self.model = JumpReLUModelConfig(lambda_s=10)
+#         match self.recipe:
+#             case 'baseline':
+#                 self.model = BaselineModelConfig(lambda_s=2)
+#             case 'jumprelu':
+#                 self.model = JumpReLUModelConfig(lambda_s=10)
 
 
 class Runner(AutoencoderRunnerABC):

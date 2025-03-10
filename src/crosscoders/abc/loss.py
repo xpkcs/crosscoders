@@ -3,19 +3,17 @@
 
 
 from abc import abstractmethod
-from crosscoders.abc.base import BaseABC
-from crosscoders.dataclasses.configs.runner import LossConfig
-from crosscoders.dataclasses.metrics.loss import DeadNeuronMetrics, LossMetrics
-
 
 import torch
 
-
+from crosscoders.abc.base import BaseABC
+# from crosscoders.dataclasses.configs.runner import LossConfig
+from crosscoders.dataclasses.metrics.loss import DeadNeuronMetrics, LossMetrics
 
 
 class LossABC(BaseABC):
 
-    cfg: LossConfig
+    # cfg: LossConfig
 
 
     @abstractmethod
@@ -32,7 +30,7 @@ class LossABC(BaseABC):
         residual_variance = (x - x_hat).var(dim=0).sum()
 
         return (1 - (residual_variance / variance)).item()
-    
+
 
     @staticmethod
     def dead_neurons(x_enc: torch.Tensor):

@@ -2,17 +2,11 @@
 
 
 
-import click
+from pathlib import Path
+
 # import ray
 import hydra
-from omegaconf import DictConfig, OmegaConf
-from pathlib import Path
-import torch
 
-from crosscoders.autoencoders.baseline import BaselineAutoencoder, BaselineModelConfig
-from hydra.core.config_store import ConfigStore
-
-from crosscoders.constants import get_constants, set_constants
 from crosscoders.dataclasses.configs.config import Config
 
 # from crosscoders.constants import CONSTANTS, get_constants
@@ -34,15 +28,15 @@ from crosscoders.dataclasses.configs.config import Config
 #     NUM_TRAINERS: int = 1
 
 
-cs = ConfigStore.instance()
-cs.store(name='config', node=Config)
+# cs = ConfigStore.instance()
+# cs.store(name='config', node=Config)
 
-def ifelse(condition, on_if, on_else):
+# def ifelse(condition, on_if, on_else):
 
-    return on_if if condition else on_else
+#     return on_if if condition else on_else
 
-OmegaConf.register_new_resolver('ifelse', ifelse)
-OmegaConf.register_new_resolver('eval', eval)
+# OmegaConf.register_new_resolver('ifelse', ifelse)
+# OmegaConf.register_new_resolver('eval', eval)
 
 
 
@@ -93,11 +87,15 @@ def main(cfg: Config) -> None:
     # )
 
     # print('Input: Manual Overrides')
-    print('-' * 50)
-    print(OmegaConf.to_yaml(cfg, resolve=True))
-    print('-' * 50)
+    # print('-' * 50)
+    # print(OmegaConf.to_yaml(cfg, resolve=True))
+    # print('-' * 50)
 
     # set_constants(OmegaConf.to_container(cfg, resolve=True))
+
+    from crosscoders.autoencoders.runner import Runner
+    from crosscoders.constants import set_constants
+
     set_constants(cfg)
 
     # cfg = hydra.utils.instantiate(manual_overrides)
@@ -114,22 +112,24 @@ def main(cfg: Config) -> None:
 
 
 
+    # hydra.utils.instantiate(cfg)
+    runner = Runner(cfg)
 
 
+    # from scripts import data, train   # , inference
+    # match cfg['mode']:
+    #     case 'data':
+    #         data.main()
 
-    from scripts import data, train   # , inference
-    match cfg['mode']:
-        case 'data':
-            data.main()
+    #     case 'train':
+    #         train.main()
 
-        case 'train':
-            train.main()
-
-        case 'inference':
-            ...
+    #     case 'inference':
+    #         ...
 
 
 
 
 if __name__ == '__main__':
+    main()
     main()

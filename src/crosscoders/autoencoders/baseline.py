@@ -11,23 +11,18 @@
 
 
 from dataclasses import dataclass, field
-from typing import Literal
+
 import einops
 import torch
+
 from crosscoders.abc.dataclass import DataclassABC
 from crosscoders.abc.model import AutoencoderABC
-from crosscoders.constants import CONSTANTS
+# from crosscoders.constants import CONSTANTS
+from crosscoders.config import get_config
 from crosscoders.dataclasses.configs.globals import HardwareConfig
-
-from torch import nn
-
 from crosscoders.dataclasses.metrics.loss import LossMetrics
 
-from torch.nn.functional import relu, tanh
-
-
-
-
+CONSTANTS = get_config()
 
 @dataclass(repr=False)
 class BaselineModelConfig(DataclassABC):
