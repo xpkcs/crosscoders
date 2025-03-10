@@ -7,6 +7,7 @@ from abc import abstractmethod
 import einops
 import torch
 
+from crosscoders.config import get_config
 from crosscoders.dataclasses.metrics.loss import DeadNeuronMetrics
 
 # from typing import Any, Callable, List, Literal, Optional, Tuple, TypeVar, Union, overload
@@ -14,7 +15,7 @@ from crosscoders.dataclasses.metrics.loss import DeadNeuronMetrics
 
 # from crosscoders.dataclasses.configs.runner import ModelConfig
 
-
+CONFIG = get_config()
 
 
 class AutoencoderABC(torch.nn.Module):
@@ -25,6 +26,7 @@ class AutoencoderABC(torch.nn.Module):
 
         self.cfg = cfg
 
+        torch.manual_seed(CONFIG.seed)
 
 
 

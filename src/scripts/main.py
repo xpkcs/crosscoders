@@ -94,9 +94,9 @@ def main(cfg: Config) -> None:
     # set_constants(OmegaConf.to_container(cfg, resolve=True))
 
     from crosscoders.autoencoders.runner import Runner
-    from crosscoders.constants import set_constants
+    from crosscoders.config import set_config
 
-    set_constants(cfg)
+    set_config(cfg)
 
     # cfg = hydra.utils.instantiate(manual_overrides)
 

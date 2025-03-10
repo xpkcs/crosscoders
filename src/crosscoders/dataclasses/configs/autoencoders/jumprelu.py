@@ -1,28 +1,60 @@
 
 
+from dataclasses import dataclass, field
 
-from dataclasses import dataclass
+from crosscoders.dataclasses.configs.autoencoders import (
+    AutoencoderConfig,
+    AutoencoderInitConfig,
+    HyperparametersConfig,
+    LossMetrics,
+    ModuleConfig,
+    ParameterInitializationFunctionConfig
+)
 
-from crosscoders.dataclasses.configs.autoencoders import (CrosscoderConfig,
-                                                          Hyperparameters,
-                                                          LossMetrics)
+
+__all__ = ['JumpReLUModuleConfig']
+
+
 
 
 @dataclass
-class JumpReLUHyperparameters(Hyperparameters):
+class JumpReLUHyperparametersConfig(HyperparametersConfig):
 
-    eps: float
-    c: float
-    lambda_p: float
+    lambda_s: float = 10.
+    eps: float = 2.
+    c: float = 4.
+    lambda_p: float = 3e-6
 
 
 @dataclass
-class JumpReLUCrosscoderConfig(CrosscoderConfig):
+class JumpReLUParameterInitializationFunctionConfig(ParameterInitializationFunctionConfig):
+
+    pass
+
+
+@dataclass
+class JumpReLUAutoencoderInitConfig(AutoencoderInitConfig):
+
+    param_init: JumpReLUParameterInitializationFunctionConfig = field(default_factory=JumpReLUParameterInitializationFunctionConfig)
+
+
+@dataclass
+class JumpReLUAutoencoderConfig(AutoencoderConfig):
 
     _target_: str = 'crosscoders.autoencoders.jumprelu.JumpReLUAutoencoder'
+
+    cfg: JumpReLUAutoencoderInitConfig = field(default_factory=JumpReLUAutoencoderInitConfig)
 
 
 @dataclass
 class JumpReLULossMetrics(LossMetrics):
 
     lp: float
+
+
+@dataclass
+class JumpReLUModuleConfig(ModuleConfig):
+
+    hps: JumpReLUHyperparametersConfig = field(default_factory=JumpReLUHyperparametersConfig)
+    model: JumpReLUAutoencoderConfig = field(default_factory=JumpReLUAutoencoderConfig)
+    # loss_metrics: JumpReLULossMetrics = JumpReLULossMetrics

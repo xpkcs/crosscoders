@@ -1,68 +1,42 @@
 
 
-
-
-
-
-
-
-
-
-
-
-from dataclasses import dataclass, field
-
 import einops
 import torch
 
-from crosscoders.abc.dataclass import DataclassABC
 from crosscoders.abc.model import AutoencoderABC
-# from crosscoders.constants import CONSTANTS
 from crosscoders.config import get_config
-from crosscoders.dataclasses.configs.globals import HardwareConfig
+from crosscoders.dataclasses.configs.autoencoders import AutoencoderInitConfig
+from crosscoders.dataclasses.configs.config import Config
 from crosscoders.dataclasses.metrics.loss import LossMetrics
 
-CONSTANTS = get_config()
+CONFIG = get_config()
 
-@dataclass(repr=False)
-class BaselineModelConfig(DataclassABC):
-
-    N_LAYERS: int = 4
-    D_MODEL: int = 768
-    D_CODER: int = 24576
-
-    lambda_s: float = 2
-
-    HARDWARE: HardwareConfig = field(default_factory=HardwareConfig)
 
 
 
 class BaselineAutoencoder(AutoencoderABC):
 
-    def __init__(self, cfg: BaselineModelConfig = BaselineModelConfig()):
+
+    cfg: AutoencoderInitConfig
+
+    def __init__(self, cfg: AutoencoderInitConfig):
 
         super().__init__(cfg)
 
-        torch.manual_seed(314159)
 
-        # kaiming uniform init
-        # W_dec
-        self.W_dec = torch.nn.Parameter(torch.empty
-            ((self.cfg.D_CODER, self.cfg.N_LAYERS, self.cfg.D_MODEL),
-            **self.cfg.HARDWARE.asdict()))
+        # dec
+        self.W_dec = torch.nn.Parameter(torch.empty(
+            self.cfg.d_coder, self.cfg.n_layers, self.cfg.d_model))
 
         self.b_dec = torch.nn.Parameter(torch.zeros(
-            (self.cfg.N_LAYERS, self.cfg.D_MODEL),
-            **self.cfg.HARDWARE.asdict()))
+            self.cfg.n_layers, self.cfg.d_model))
 
-        # W_enc
-        self.W_enc = torch.nn.Parameter(torch.empty
-            ((self.cfg.D_MODEL, self.cfg.N_LAYERS, self.cfg.D_CODER),
-            **self.cfg.HARDWARE.asdict()))
+        # enc
+        self.W_enc = torch.nn.Parameter(torch.empty(
+            self.cfg.d_model, self.cfg.n_layers, self.cfg.d_coder))
 
         self.b_enc = torch.nn.Parameter(torch.zeros(
-            (self.cfg.D_CODER,),
-            **self.cfg.HARDWARE.asdict()))
+            self.cfg.d_coder))
 
 
         # init W_dec
@@ -86,7 +60,7 @@ class BaselineAutoencoder(AutoencoderABC):
         return x_enc
 
 
-    def loss(self, y, y_hat, **kwargs) -> LossMetrics:
+    def loss(self, y, y_hat, lambda_s) -> LossMetrics:
 
         error = (
             (y - y_hat).pow(2)
@@ -116,7 +90,7 @@ class BaselineAutoencoder(AutoencoderABC):
 
         loss = (
             error +
-            kwargs.get('lambda_s', self.cfg.lambda_s) * l1
+            lambda_s * l1
         )
 
 

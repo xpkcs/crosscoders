@@ -5,10 +5,9 @@
 import gc
 import os
 import tempfile
-from dataclasses import MISSING, dataclass, field
-from typing import Any, Dict, Literal
+from typing import Dict
 
-import numpy as np
+import hydra
 import ray
 import ray.train
 import ray.tune
@@ -16,17 +15,13 @@ import torch
 
 # from crosscoders import CONSTANTS
 from crosscoders.abc import AutoencoderRunnerABC
-from crosscoders.abc.dataclass import DataclassABC
-from crosscoders.autoencoders.baseline import (BaselineAutoencoder,
-                                               BaselineModelConfig)
-from crosscoders.autoencoders.jumprelu import (JumpReLUAutoencoder,
-                                               JumpReLUModelConfig)
 from crosscoders.autoencoders.schedulers import (get_scheduler_lambda_s,
                                                  get_scheduler_lr)
 from crosscoders.config import get_config
-from crosscoders.dataclasses.configs.runner import (OptimizerConfig,
-                                                    RunnerConfig)
-from crosscoders.dataclasses.metrics.loss import LossMetrics
+from crosscoders.dataclasses.configs.autoencoders import LossMetrics
+from crosscoders.dataclasses.configs.config import Config
+# from crosscoders.dataclasses.configs.runner import RunnerConfig
+# from crosscoders.dataclasses.metrics.loss import LossMetrics
 from crosscoders.utils import dataclass_to_dict, flatten_dict
 
 CONSTANTS = get_config()
@@ -59,17 +54,16 @@ CONSTANTS = get_config()
 
 class Runner(AutoencoderRunnerABC):
 
-    def __init__(self, cfg: RunnerConfig) -> None:
+
+    cfg: Config
+
+    def __init__(self, cfg: Config) -> None:
 
         super().__init__(cfg)
 
-        match self.cfg.recipe:
-            case 'baseline':
-                self.model = BaselineAutoencoder(self.cfg.model)
-            case 'jumprelu':
-                self.model = JumpReLUAutoencoder(self.cfg.model)
 
-        self.optimizer = self.configure_optimizers()
+        self.model = hydra.utils.instantiate(cfg.runner.crosscoder).model
+        self.optimizer = hydra.utils.instantiate(cfg.runner.optimizer, params=list(self.model.parameters()))
         self.scheduler = self.configure_schedulers()
 
         self.num_tokens_processed: int = 0
@@ -80,14 +74,14 @@ class Runner(AutoencoderRunnerABC):
 
         return {
             'lr'      : get_scheduler_lr(self.optimizer),
-            'lambda_s': get_scheduler_lambda_s(self.cfg.model.lambda_s)
+            'lambda_s': get_scheduler_lambda_s(self.cfg.runner.crosscoder.hps.lambda_s)
         }
 
 
     def training_step(self, batch: Dict[str, torch.Tensor]) -> LossMetrics:
 
-        x     = self.cfg.X_SCALAR * batch[self.cfg.INPUT_NAME]
-        y     = self.cfg.Y_SCALAR * batch[self.cfg.OUTPUT_NAME]
+        x     = self.cfg.runner.crosscoder.hps.x_scalar * batch[self.cfg.runner.input_name]
+        y     = self.cfg.runner.crosscoder.hps.y_scalar * batch[self.cfg.runner.output_name]
         y_hat = self.model(x)
 
         loss, metrics = self.model.loss(y, y_hat, lambda_s=self.scheduler['lambda_s'].get_lambda_s())
@@ -98,37 +92,31 @@ class Runner(AutoencoderRunnerABC):
         self.optimizer.step()
         self.optimizer.zero_grad()
 
+        self.num_tokens_processed += batch[self.cfg.runner.input_name].shape[0]
 
-        return metrics
+        report = (
+            {'training_iteration': self.num_tokens_processed} |
+            flatten_dict(dataclass_to_dict(metrics)) |
+            flatten_dict(
+                {
+                    'lr'      : self.scheduler['lr'].get_last_lr()[0],
+                    'lambda_s': self.scheduler['lambda_s'].get_lambda_s()
+                }
+            )
+        )
+
+        self.scheduler['lr'].step()
+        self.scheduler['lambda_s'].step()
+
+
+        return metrics, report
 
 
     def fit(self, dl, **kwargs):
 
         for batch_idx, batch in enumerate(dl):
 
-            metrics = self.training_step(batch)
-
-
-            self.num_tokens_processed += batch[self.cfg.INPUT_NAME].shape[0]
-
-            report = (
-                {'training_iteration': self.num_tokens_processed} |
-                flatten_dict(dataclass_to_dict(metrics)) |
-                flatten_dict(
-                    {
-                        'lr'      : self.scheduler['lr'].get_last_lr()[0],
-                        'lambda_s': self.scheduler['lambda_s'].get_lambda_s()
-                    }
-                )
-            )
-
-            self.scheduler['lr'].step()
-            self.scheduler['lambda_s'].step()
-
-
-
-
-
+            metrics, report = self.training_step(batch)
 
             ray.train.report(report)
 
@@ -145,6 +133,7 @@ class Runner(AutoencoderRunnerABC):
 
 
         return report
+
 
     def cleanup(self):
 

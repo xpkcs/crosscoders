@@ -6,7 +6,7 @@ import torch
 from crosscoders.abc.dataclass import DataclassABC
 from crosscoders.abc.model import AutoencoderABC
 from crosscoders.constants import CONSTANTS
-from crosscoders.dataclasses.configs.globals import HardwareConfig
+# from crosscoders.dataclasses.configs.globals import HardwareConfig
 
 from torch.nn.functional import relu, tanh
 
@@ -26,7 +26,7 @@ class JumpReLUModelConfig(DataclassABC):
     c: float = 4
     eps: float = 2
 
-    HARDWARE: HardwareConfig = field(default_factory=HardwareConfig)
+    # HARDWARE: HardwareConfig = field(default_factory=HardwareConfig)
 
 
 @dataclass(repr=False)

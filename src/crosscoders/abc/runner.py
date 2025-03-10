@@ -6,16 +6,16 @@ from abc import abstractmethod
 import lightning as pl
 
 
-from crosscoders.abc import AutoencoderABC, LossABC
+# from crosscoders.abc import AutoencoderABC, LossABC
 from crosscoders.abc.base import BaseABC
-from crosscoders.dataclasses.configs.runner import RunnerConfig
+# from crosscoders.dataclasses.configs.runner import RunnerConfig
 
 
 
 
 class AutoencoderRunnerABC(BaseABC):
 
-    cfg: RunnerConfig
+    # cfg: RunnerConfig
 
 
     # @property

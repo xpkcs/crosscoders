@@ -1,10 +1,10 @@
 
 
-from dataclasses import MISSING, dataclass, field
+from dataclasses import dataclass
+from omegaconf import MISSING
 
-from crosscoders.abc.dataclass import DataclassABC as DataclassABC
-from crosscoders.dataclasses.configs.globals import \
-    HardwareConfig as HardwareConfig
+
+
 
 # @dataclass
 # class InitWdec:
@@ -28,14 +28,6 @@ from crosscoders.dataclasses.configs.globals import \
 #     _target_: str = torch.nn.functional.relu
 
 
-@dataclass
-class ParameterInitializationFunctionConfig:
-
-    W_dec: str = 'kaiming_uniform_'
-    W_enc: str = 'transpose'
-    b_dec: str = 'pass'
-    b_enc: str = 'pass'
-
 
 # @dataclass
 # class CrosscoderConfig:
@@ -43,8 +35,6 @@ class ParameterInitializationFunctionConfig:
 #     d_coder: int = 24576
 
 #     init: ParameterInitializationFunctionConfig = field(default_factory=ParameterInitializationFunctionConfig)
-
-
 
 #     # W_dec_init: InitWdec = field(default_factory=InitWdec)
 #     # W_enc_init: InitWenc = field(default_factory=InitWenc)
@@ -55,51 +45,82 @@ class ParameterInitializationFunctionConfig:
 #     activation_function: str = 'relu'
 
 
-
 @dataclass
-class CrosscoderConfig:
-    _target_: str = ''
+class HyperparametersConfig:
 
-    d_coder: int = 24576
-    init: ParameterInitializationFunctionConfig = field(default_factory=ParameterInitializationFunctionConfig)
-
-
-@dataclass
-class Hyperparameters:
-
-    lambda_s: float = 10
+    lambda_s: float = 1.
     x_scalar: float = 1.
     y_scalar: float = 1.
 
 
 @dataclass
+class ParameterInitializationFunctionConfig:
+
+    W_dec: str = 'kaiming_uniform_'
+    W_enc: str = 'transpose'
+    b_dec: str = 'pass'
+    b_enc: str = 'pass'
+
+
+@dataclass
+class AutoencoderInitConfig:
+
+    n_layers: int = '${runner.language_model.n_layers}'
+    d_model: int = '${runner.language_model.d_model}'
+    d_coder: int = 24576
+
+    param_init: ParameterInitializationFunctionConfig = MISSING
+
+
+@dataclass
+class AutoencoderConfig:
+
+    _target_: str = MISSING
+    _convert_: str = 'object'
+
+    cfg: AutoencoderInitConfig = MISSING
+
+
+@dataclass
+class DeadNeuronMetrics:
+
+    all_tokens: float
+    one_token : float
+    no_token  : float
+
+
+@dataclass
 class LossMetrics:
 
-    loss: float
-    error: float
-    l1: float
-    l0: float
-
     explained_variance: float
+    dead_neuron: DeadNeuronMetrics
+
+    loss : float
+    error: float
+    l1   : float
+    l0   : float
 
 
-# @dataclass
-# class HyperparametersJumpReLU(Hyperparameters):
-#     eps: float = 2
-#     c: float = 4
-#     lambda_p: float = 3e-6
+@dataclass
+class ModuleConfig:
+
+    hps: HyperparametersConfig
+    model: AutoencoderConfig
+    # loss_metrics: LossMetrics
 
 
 
 
+from crosscoders.dataclasses.configs.autoencoders.baseline import *
+from crosscoders.dataclasses.configs.autoencoders.jumprelu import *
 
-from hydra.core.config_store import ConfigStore
+from crosscoders.dataclasses.configs.autoencoders.baseline import __all__ as __baseline_all__
+from crosscoders.dataclasses.configs.autoencoders.jumprelu import __all__ as __jumprelu_all__
 
-from crosscoders.dataclasses.configs.autoencoders.baseline import \
-    BaselineCrosscoderConfig
-from crosscoders.dataclasses.configs.autoencoders.jumprelu import \
-    JumpReLUCrosscoderConfig
 
-cs = ConfigStore.instance()
-cs.store(group='crosscoder', name='baseline', node=BaselineCrosscoderConfig)
-cs.store(group='crosscoder', name='jumprelu', node=JumpReLUCrosscoderConfig)
+__all__ = []
+__all__ += [
+    object
+    for _ in (__baseline_all__, __jumprelu_all__)
+    for object in _
+]

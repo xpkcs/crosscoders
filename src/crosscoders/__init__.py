@@ -1,19 +1,19 @@
 
 
-
+from dotenv import load_dotenv;     load_dotenv()
 
 
 import torch
-
-# from crosscoders.constants import CONSTANTS
-# # import order matters
-from crosscoders import abc as abc
-from crosscoders import autoencoders as autoencoders
-from crosscoders import dataclasses as dataclasses
-
 torch.set_default_dtype(torch.float32)
+torch.set_default_device('cuda' if torch.cuda.is_available() else 'cpu')
+
+from crosscoders.config import get_config, set_config
+from crosscoders import abc, autoencoders, dataclasses
 
 
 
-from crosscoders.config import get_config as get_config
-from crosscoders.config import set_config as set_config
+
+__all__ = [
+    'get_config', 'set_config',
+    'abc', 'autoencoders', 'dataclasses',
+]

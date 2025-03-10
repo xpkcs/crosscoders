@@ -1,24 +1,57 @@
 
 
+from dataclasses import dataclass, field
 
-from dataclasses import dataclass
+from crosscoders.dataclasses.configs.autoencoders import (
+    AutoencoderConfig,
+    AutoencoderInitConfig,
+    HyperparametersConfig,
+    LossMetrics,
+    ModuleConfig,
+    ParameterInitializationFunctionConfig
+)
 
-from crosscoders.dataclasses.configs.autoencoders import (CrosscoderConfig,
-                                                          Hyperparameters,
-                                                          LossMetrics)
+
+__all__ = ['BaselineModuleConfig']
+
+
 
 
 @dataclass
-class BaselineHyperparameters(Hyperparameters):
+class BaselineHyperparametersConfig(HyperparametersConfig):
+
+    lambda_s: float = 2.
+
+
+@dataclass
+class BaselineParameterInitializationFunctionConfig(ParameterInitializationFunctionConfig):
+
     pass
 
 
 @dataclass
-class BaselineCrosscoderConfig(CrosscoderConfig):
+class BaselineAutoencoderInitConfig(AutoencoderInitConfig):
 
-    _target_: str = 'crosscoders.autoencoders.baseline.BaselineAutoencoder'
+    param_init: BaselineParameterInitializationFunctionConfig = field(default_factory=BaselineParameterInitializationFunctionConfig)
+
+
+@dataclass
+class BaselineAutoencoderConfig(AutoencoderConfig):
+
+    _target_: str = 'crosscoders.autoencoders.BaselineAutoencoder'
+
+    cfg: BaselineAutoencoderInitConfig = field(default_factory=BaselineAutoencoderInitConfig)
 
 
 @dataclass
 class BaselineLossMetrics(LossMetrics):
+
     pass
+
+
+@dataclass
+class BaselineModuleConfig(ModuleConfig):
+
+    hps: BaselineHyperparametersConfig = field(default_factory=BaselineHyperparametersConfig)
+    model: BaselineAutoencoderConfig = field(default_factory=BaselineAutoencoderConfig)
+    # loss_metrics: BaselineLossMetrics = MISSING
