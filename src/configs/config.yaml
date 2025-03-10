@@ -1,0 +1,16 @@
+defaults:
+  - _self_
+#   - runner/runner.yaml
+
+
+# globals:
+  # _target_: crosscoders.dataclasses.configs.config.Globals
+
+local: False
+# S3_BUCKET: crosscoders
+# dtype: float32
+# device: cuda
+
+
+paths:
+  config_path: t

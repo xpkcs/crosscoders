@@ -17,17 +17,19 @@ import torch
 
 
 # from crosscoders.data.preprocessing import TokenToActivations
-from crosscoders.autoencoders.acausal.loss import AcausalLoss
-from crosscoders.autoencoders.acausal.model import AcausalAutoencoder
-from crosscoders.autoencoders.acausal.runner import AcausalAutoencoderRunner
-from crosscoders.dataclasses.configs.runner import LossConfig, ModelConfig
+# from crosscoders.autoencoders.acausal.loss import AcausalLoss
+# from crosscoders.autoencoders.acausal.model import AcausalAutoencoder
+# from crosscoders.autoencoders.acausal.runner import AcausalAutoencoderRunner
+# from crosscoders.dataclasses.configs.runner import LossConfig, ModelConfig
 
-from crosscoders import CONSTANTS
+# from crosscoders import CONSTANTS
 # from crosscoders.dataclasses.configs.runner import RunnerConfig
 from crosscoders.autoencoders.runner import Runner, RunnerConfig
+from crosscoders.constants import get_constants
 from crosscoders.data.dataset import TinyStoriesRayDataset, get_s3_keys
 from crosscoders.utils import from_dict, get_config, update_dataclass
 from torch.utils.tensorboard import SummaryWriter
+
 
 import os
 
@@ -39,6 +41,8 @@ import datetime, numpy as np
 import logging
 
 logger = logging.getLogger()
+
+CONSTANTS = get_constants()
 
 
 def get_x_scalar(ds, runner_cfg):
@@ -179,12 +183,13 @@ def main():
         scaling_config=ray.train.ScalingConfig(
             num_workers=CONSTANTS.EXPERIMENT.NUM_TRAINERS,
             use_gpu=True,
-            resources_per_worker={'CPU': 2, 'GPU': 1}
+            resources_per_worker={'CPU': 1, 'GPU': 1}
         ),
-        # run_config = ray.train.RunConfig(
-        #     checkpoint_config=ray.train.CheckpointConfig(num_to_keep=1),
-        #     storage_path='s3://crosscoders/ray/tiny-stories-33M'
-        # ),
+        run_config = ray.train.RunConfig(
+            # checkpoint_config=ray.train.CheckpointConfig(num_to_keep=1),
+            # storage_path='s3://crosscoders/ray/tiny-stories-33M'
+            storage_path='/home/yandy/ray_results/test'
+        ),
         datasets={'train': train_ds}
     )
     result: ray.train.Result = trainer.fit()

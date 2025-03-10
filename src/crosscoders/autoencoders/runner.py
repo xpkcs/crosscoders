@@ -12,10 +12,11 @@ import torch
 import ray, ray.train, ray.tune
 
 
-from crosscoders import CONSTANTS
+# from crosscoders import CONSTANTS
 from crosscoders.abc import AutoencoderRunnerABC
 from crosscoders.abc.dataclass import DataclassABC
 from crosscoders.autoencoders.schedulers import get_scheduler_lambda_s, get_scheduler_lr
+from crosscoders.constants import get_constants
 from crosscoders.dataclasses.configs.runner import OptimizerConfig
 from crosscoders.dataclasses.metrics.loss import LossMetrics
 
@@ -24,6 +25,8 @@ from crosscoders.utils import dataclass_to_dict, flatten_dict
 from crosscoders.autoencoders.baseline import BaselineAutoencoder, BaselineModelConfig
 from crosscoders.autoencoders.jumprelu import JumpReLUAutoencoder, JumpReLUModelConfig
 
+from crosscoders.constants import get_constants
+CONSTANTS = get_constants()
 
 
 @dataclass(repr=False)
