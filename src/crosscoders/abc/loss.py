@@ -7,8 +7,9 @@ from abc import abstractmethod
 import torch
 
 from crosscoders.abc.base import BaseABC
+from crosscoders.dataclasses.configs.autoencoders import DeadNeuronMetrics
 # from crosscoders.dataclasses.configs.runner import LossConfig
-from crosscoders.dataclasses.metrics.loss import DeadNeuronMetrics, LossMetrics
+# from crosscoders.dataclasses.metrics.loss import DeadNeuronMetrics, LossMetrics
 
 
 class LossABC(BaseABC):
@@ -17,7 +18,7 @@ class LossABC(BaseABC):
 
 
     @abstractmethod
-    def __call__(self, x: torch.Tensor, x_hat: torch.Tensor, **kwargs: dict) -> LossMetrics:
+    def __call__(self, x: torch.Tensor, x_hat: torch.Tensor, **kwargs: dict):
         ...
 
 

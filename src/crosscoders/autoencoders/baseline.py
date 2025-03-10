@@ -6,8 +6,8 @@ import torch
 from crosscoders.abc.model import AutoencoderABC
 from crosscoders.config import get_config
 from crosscoders.dataclasses.configs.autoencoders import AutoencoderInitConfig
+from crosscoders.dataclasses.configs.autoencoders.baseline import BaselineLossMetrics
 from crosscoders.dataclasses.configs.config import Config
-from crosscoders.dataclasses.metrics.loss import LossMetrics
 
 CONFIG = get_config()
 
@@ -60,7 +60,7 @@ class BaselineAutoencoder(AutoencoderABC):
         return x_enc
 
 
-    def loss(self, y, y_hat, lambda_s) -> LossMetrics:
+    def loss(self, y, y_hat, lambda_s):
 
         error = (
             (y - y_hat).pow(2)
@@ -94,7 +94,7 @@ class BaselineAutoencoder(AutoencoderABC):
         )
 
 
-        return loss, LossMetrics(
+        return loss, BaselineLossMetrics(
             loss               = loss.item(),
             error              = error.item(),
             l0                 = l0.item(),

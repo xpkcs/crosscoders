@@ -1,38 +1,33 @@
 
 from dataclasses import dataclass, field
-from crosscoders.dataclasses.metrics.loss import LossMetrics
 import einops
 import torch
 from crosscoders.abc.dataclass import DataclassABC
 from crosscoders.abc.model import AutoencoderABC
-from crosscoders.constants import CONSTANTS
 # from crosscoders.dataclasses.configs.globals import HardwareConfig
 
 from torch.nn.functional import relu, tanh
 
+from crosscoders.dataclasses.configs.autoencoders.jumprelu import JumpReLULossMetrics
 
 
 
 
-@dataclass(repr=False)
-class JumpReLUModelConfig(DataclassABC):
 
-    N_LAYERS: int = 4
-    D_MODEL: int = 768
-    D_CODER: int = 24576
+# @dataclass(repr=False)
+# class JumpReLUModelConfig(DataclassABC):
 
-    lambda_s: float = 10
-    lambda_p: float = 3e-6
-    c: float = 4
-    eps: float = 2
+#     N_LAYERS: int = 4
+#     D_MODEL: int = 768
+#     D_CODER: int = 24576
 
-    # HARDWARE: HardwareConfig = field(default_factory=HardwareConfig)
+#     lambda_s: float = 10
+#     lambda_p: float = 3e-6
+#     c: float = 4
+#     eps: float = 2
 
+#     # HARDWARE: HardwareConfig = field(default_factory=HardwareConfig)
 
-@dataclass(repr=False)
-class JumpReLULossMetrics(LossMetrics):
-
-    lp: torch.Tensor
 
 
 class JumpReLUFunction(torch.autograd.Function):
@@ -70,7 +65,7 @@ class JumpReLUFunction(torch.autograd.Function):
 
 class JumpReLUAutoencoder(AutoencoderABC):
 
-    def __init__(self, cfg: JumpReLUModelConfig, reconstruction: bool = False):
+    def __init__(self, cfg, reconstruction: bool = False):
 
         super().__init__(cfg)
 
@@ -132,7 +127,7 @@ class JumpReLUAutoencoder(AutoencoderABC):
         return x_enc
 
 
-    def loss(self, y, y_hat, **kwargs) -> JumpReLULossMetrics:
+    def loss(self, y, y_hat, **kwargs):
 
         error = (
             (y - y_hat).pow(2)

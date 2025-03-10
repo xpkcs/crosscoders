@@ -1,19 +1,13 @@
 
 
-
-
 from abc import abstractmethod
 
 import einops
 import torch
 
 from crosscoders.config import get_config
-from crosscoders.dataclasses.metrics.loss import DeadNeuronMetrics
+from crosscoders.dataclasses.configs.autoencoders import DeadNeuronMetrics
 
-# from typing import Any, Callable, List, Literal, Optional, Tuple, TypeVar, Union, overload
-
-
-# from crosscoders.dataclasses.configs.runner import ModelConfig
 
 CONFIG = get_config()
 
@@ -104,5 +98,4 @@ class AutoencoderABC(torch.nn.Module):
         one_token  = x_enc.any(dim=0).sum()             # fires on at least one token
         no_token   = (x_enc == 0).all(dim=0).sum()      # fires on no tokens
 
-        return DeadNeuronMetrics(*map(lambda _: (_ / x_enc.shape[-1]).item(), (all_tokens, one_token, no_token)))
         return DeadNeuronMetrics(*map(lambda _: (_ / x_enc.shape[-1]).item(), (all_tokens, one_token, no_token)))
