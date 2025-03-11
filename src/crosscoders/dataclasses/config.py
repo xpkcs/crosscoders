@@ -29,19 +29,19 @@ class Paths:
 
     # config_path: str = MISSING
     data_dir   : str = '${._Paths__prefix}/data'
-    tokens_dir : str = '${.data_dir}/${..runner.dataset.name}/language_model=${..runner.language_model.name}/stage=${..runner.dataset.slice}/tag=${..runner.dataset.prefix}/'
+    tokens_dir : str = '${.data_dir}/${..runner.dataset.name}/language_model=${..runner.language_model.name}/slice=${..runner.dataset.slice}/tag=${..runner.dataset.prefix}/'
 
 
 
 @dataclass
 class Config:
 
-    stage    : str = MISSING
+    # stage    : str = MISSING
 
     local    : bool = False
     s3_bucket: str = 'crosscoders'
     paths    : Paths = field(default_factory=Paths)
-    slice    : str = '${.runner.dataset.slice}'
+    # slice    : str = '${.runner.dataset.slice}'
 
     seed  : int = 314159
     device: str = 'cuda'

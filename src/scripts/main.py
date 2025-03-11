@@ -9,8 +9,8 @@ import hydra
 import click
 import ray.runtime_env
 
-from crosscoders.config import load_omegaconf
-from crosscoders.dataclasses.config import Config
+# from crosscoders.config import load_omegaconf
+# from crosscoders.dataclasses.config import Config
 
 
 
@@ -30,8 +30,6 @@ def main(stage, ray_job) -> None:
     '''
     CLI to run the `crosscoders` package.
     '''
-
-
 
 
     if ray_job:
@@ -60,16 +58,14 @@ def main(stage, ray_job) -> None:
 
 
 
-    # # from crosscoders.autoencoders.runner import Runner
-    # # runner = Runner(cfg)
-
 
     print(f'> STAGE: {stage}')
 
-    cfg = load_omegaconf(stage) #, overrides=[f'++stage={stage}'])
+    from crosscoders.config import load_omegaconf
+    cfg = load_omegaconf(stage) # , overrides=[f'++stage=blah'])
 
 
-    from scripts import data#, train   # , inference
+    from scripts import data, train   # , eval
     match stage:
         case 'data':
             data.main(cfg)
@@ -77,7 +73,7 @@ def main(stage, ray_job) -> None:
         case 'train':
             train.main(cfg)
 
-        case 'inference':
+        case 'eval':
             ...
 
 

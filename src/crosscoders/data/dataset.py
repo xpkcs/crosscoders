@@ -24,6 +24,8 @@ CONFIG = get_config()
 
 def get_s3_keys(bucket_name, key_prefix):
 
+    # TODO: logging
+
     bucket = boto3.resource('s3').Bucket(bucket_name)
 
     return [
@@ -38,7 +40,7 @@ class Dataset:
 
         self.name = name
         self.slice = slice
-        self.prefix = f'{CONFIG.paths.tokens_dir.rstrip("/")}/{prefix}/'
+        self.path = CONFIG.paths.tokens_dir
         self.rng = np.random.default_rng(seed=CONFIG.seed)
 
 
@@ -134,8 +136,10 @@ class TokensDataset(Dataset):
 
     def save(self, ds: ray.data.Dataset) -> None:
 
+        print(f'saving activations @ {self.path}', flush=True)
+
         ds.write_parquet(
-            self.prefix,
+            self.path,
             compression='zstd',
             # concurrency=6,
             # min_rows_per_file=8192,
@@ -144,11 +148,14 @@ class TokensDataset(Dataset):
             },
         )
 
+
+
 class ActivationsDataset(Dataset):
 
     def load(self) -> ray.data.Dataset:
 
-        keys = get_s3_keys(CONFIG.s3_bucket, self.prefix)
+        path = self.path.split('/')
+        keys = get_s3_keys(bucket_name=path[2], key_prefix='/'.join(path[3:]))
         self.rng.shuffle(keys)
 
         ds = ray.data.read_parquet_bulk(
@@ -160,3 +167,6 @@ class ActivationsDataset(Dataset):
 
         if CONFIG.runner.max_tokens:
             ds = ds.limit(CONFIG.runner.max_tokens)
+
+
+        return ds

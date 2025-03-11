@@ -6,6 +6,7 @@ import os
 import tempfile
 import datasets
 import lightning as pl
+from omegaconf import OmegaConf
 import ray
 import ray.train, ray.train.torch
 import ray.train.lightning
@@ -22,12 +23,15 @@ import torch
 # from crosscoders.autoencoders.acausal.runner import AcausalAutoencoderRunner
 # from crosscoders.dataclasses.configs.runner import LossConfig, ModelConfig
 
-# from crosscoders import CONSTANTS
+# from crosscoders import CONFIG
 # from crosscoders.dataclasses.configs.runner import RunnerConfig
+from crosscoders.autoencoders.baseline import BaselineAutoencoder
 from crosscoders.autoencoders.runner import Runner
 # from crosscoders.constants import get_constants
 from crosscoders.config import get_config
 from crosscoders.data.dataset import Dataset, get_s3_keys
+from crosscoders.dataclasses.config import Config
+from crosscoders.dataclasses.runner import RunnerConfig
 from crosscoders.utils import from_dict, update_dataclass
 from torch.utils.tensorboard import SummaryWriter
 
@@ -43,7 +47,7 @@ import logging
 
 logger = logging.getLogger()
 
-CONSTANTS = get_config()
+CONFIG = get_config()
 
 
 def get_x_scalar(ds, runner_cfg):
@@ -85,15 +89,19 @@ def train_loop_per_worker(cfg, **kwargs):
     # # runner config
     # runner_cfg = from_dict(
     #     RunnerConfig,
-    #     get_config(CONSTANTS.CONFIG_FILEPATH).get('RUNNER', {}) | ray_cfg
+    #     get_config(CONFIG.CONFIG_FILEPATH).get('RUNNER', {}) | ray_cfg
     # )
 
 
     # update_dataclass(runner_cfg, ray_cfg)
 
 
-    # logger.info(runner_cfg)
-    print(cfg)
+    cfg = Config(**cfg)
+    cfg.runner = RunnerConfig(**cfg.runner)
+    cfg.runner.crosscoder = BaselineAutoencoder(**cfg.runner.crosscoder)
+    _ = OmegaConf.to_yaml(OmegaConf.create(cfg), resolve=False)
+    # logger.info(_)
+    print(_)
 
     # if 'scale' in ray_cfg and ray_cfg['scale']:
     # if ray_cfg.get('scale', False):
@@ -102,8 +110,8 @@ def train_loop_per_worker(cfg, **kwargs):
 
     # dataloader
     train_dl = train_ds.iter_torch_batches(
-        batch_size=CONSTANTS.EXPERIMENT.BATCH_SIZE,
-        # local_shuffle_buffer_size=10 * CONSTANTS.EXPERIMENT.BATCH_SIZE,
+        batch_size=CONFIG.runner.batch_size,
+        # local_shuffle_buffer_size=10 * CONFIG.EXPERIMENT.BATCH_SIZE,
         # local_shuffle_seed=314159
     )
 
@@ -157,8 +165,9 @@ def train_loop_per_worker(cfg, **kwargs):
 def main(cfg):
 
     ds = Dataset.instantiate(cfg.runner.dataset)
+    train_ds = ds.load()
 
-    print(ds)
+    print(train_ds)
 
     # train_dl = train_ds \
     #     .iter_torch_batches(
@@ -174,7 +183,7 @@ def main(cfg):
 
     trainer = TorchTrainer(
         train_loop_per_worker,
-        # train_loop_config=ExperimentConfig(),
+        train_loop_config=OmegaConf.to_container(cfg),
         scaling_config=ray.train.ScalingConfig(
             use_gpu=True,
             num_workers=1,
@@ -185,7 +194,7 @@ def main(cfg):
             # storage_path='s3://crosscoders/ray/tiny-stories-33M'
             storage_path='/home/yandy/ray_results/test'
         ),
-        datasets={'train': ds}
+        datasets={'train': train_ds}
     )
     result: ray.train.Result = trainer.fit()
 

@@ -17,11 +17,12 @@ def main(cfg):
 
     ds = Dataset.instantiate(cfg.runner.dataset)
 
-    print(ds)
 
 
 
     train_ds = ds.load()
+
+    print(train_ds)
     # print(train_ds.take_batch(5))
 
     ds.save(train_ds)

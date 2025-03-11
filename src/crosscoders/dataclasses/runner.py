@@ -43,7 +43,7 @@ class DatasetConfig:
 
     name: str = MISSING
     prefix: str = ''
-    slice: str = '${ifelse:${eq:${...stage}, "eval"}, "validation", "train"}'
+    slice: str = '${ifelse:${eq:${...runner.stage}, "eval"}, "validation", "train"}'
 
 
 @dataclass
@@ -98,10 +98,10 @@ class RunnerConfig:
         return cfg | kwargs
 
 
-    def __post_init__(self):
+    # def __post_init__(self):
 
-        # if issubclass(type(self.dataset), DatasetConfig):
-        self.dataset.slice = self.stage
+    #     # if issubclass(type(self.dataset), DatasetConfig):
+    #     self.dataset.slice = self.stage
 
 
 @dataclass
@@ -149,7 +149,7 @@ class TrainRunnerConfig(RunnerConfig):
 @dataclass
 class EvalRunnerConfig(DataRunnerConfig, TrainRunnerConfig):
 
-    stage: str = 'train'
+    stage: str = 'eval'
 
     batch_size : int = 25000
 

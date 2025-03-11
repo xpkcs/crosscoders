@@ -35,8 +35,9 @@ OmegaConf.register_new_resolver('ceil', ceil)
 
 # ------------------------- structured configs ------------------------- #
 
+from crosscoders.dataclasses.args import ArgsConfig
 from crosscoders.dataclasses.config import Config
-from crosscoders.dataclasses.runner import DataRunnerConfig, TrainRunnerConfig, EvalRunnerConfig
+from crosscoders.dataclasses.runner import DataRunnerConfig, RunnerConfig, TrainRunnerConfig, EvalRunnerConfig
 from crosscoders.dataclasses.autoencoders.baseline import BaselineAutoencoderConfig
 from crosscoders.dataclasses.autoencoders.jumprelu import JumpReLUAutoencoderConfig
 
@@ -44,11 +45,13 @@ from crosscoders.dataclasses.autoencoders.jumprelu import JumpReLUAutoencoderCon
 cs = ConfigStore.instance()
 
 cs.store(name='base_config', node=Config)
+cs.store(name='base_runner', node=RunnerConfig)
 cs.store(group='runner', name='data', node=DataRunnerConfig)
 cs.store(group='runner', name='train', node=TrainRunnerConfig)
 cs.store(group='runner', name='eval', node=EvalRunnerConfig)
 cs.store(group='crosscoder', name='baseline', node=BaselineAutoencoderConfig)
 cs.store(group='crosscoder', name='jumprelu', node=JumpReLUAutoencoderConfig)
+cs.store(name='args', node=ArgsConfig)
 
 
 
