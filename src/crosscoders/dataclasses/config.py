@@ -23,22 +23,25 @@ class Paths:
     # PROJECT_ROOT_DIR: str =
 
     # local_prefix: str = '${hydra:runtime.cwd}'
-    __local_prefix: str = Path(__file__).parents[3]
+    __local_prefix: str = Path(__file__).parents[2]
     __s3_prefix   : str = 's3://${..s3_bucket}'
     __prefix      : str = '${ifelse:${..local}, ${._Paths__local_prefix}, ${._Paths__s3_prefix}}'
 
+    # config_path: str = MISSING
     data_dir   : str = '${._Paths__prefix}/data'
-    config_path: str = MISSING
+    tokens_dir : str = '${.data_dir}/${..runner.dataset.name}/language_model=${..runner.language_model.name}/stage=${..runner.dataset.slice}/tag=${..runner.dataset.prefix}/'
+
 
 
 @dataclass
 class Config:
 
-    mode: str = MISSING
+    stage    : str = MISSING
 
     local    : bool = False
     s3_bucket: str = 'crosscoders'
     paths    : Paths = field(default_factory=Paths)
+    slice    : str = '${.runner.dataset.slice}'
 
     seed  : int = 314159
     device: str = 'cuda'

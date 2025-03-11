@@ -1,22 +1,33 @@
 
 
 import os
+from typing import List, Optional
 
 from hydra.core.config_store import ConfigStore
 from omegaconf import OmegaConf
 import torch
+import numpy as np
 
 
 
 
 # ------------------------- resolvers ------------------------- #
+def eq(x, y):
+
+    return x == y
+
 def ifelse(condition, on_if, on_else):
 
     return on_if if condition else on_else
 
+def ceil(i):
+
+    return int(np.ceil(float(i)))
 
 OmegaConf.register_new_resolver('eval', eval)
+OmegaConf.register_new_resolver('eq', eq)
 OmegaConf.register_new_resolver('ifelse', ifelse)
+OmegaConf.register_new_resolver('ceil', ceil)
 
 
 
@@ -25,6 +36,7 @@ OmegaConf.register_new_resolver('ifelse', ifelse)
 # ------------------------- structured configs ------------------------- #
 
 from crosscoders.dataclasses.config import Config
+from crosscoders.dataclasses.runner import DataRunnerConfig, TrainRunnerConfig, EvalRunnerConfig
 from crosscoders.dataclasses.autoencoders.baseline import BaselineAutoencoderConfig
 from crosscoders.dataclasses.autoencoders.jumprelu import JumpReLUAutoencoderConfig
 
@@ -32,6 +44,9 @@ from crosscoders.dataclasses.autoencoders.jumprelu import JumpReLUAutoencoderCon
 cs = ConfigStore.instance()
 
 cs.store(name='base_config', node=Config)
+cs.store(group='runner', name='data', node=DataRunnerConfig)
+cs.store(group='runner', name='train', node=TrainRunnerConfig)
+cs.store(group='runner', name='eval', node=EvalRunnerConfig)
 cs.store(group='crosscoder', name='baseline', node=BaselineAutoencoderConfig)
 cs.store(group='crosscoder', name='jumprelu', node=JumpReLUAutoencoderConfig)
 
@@ -39,12 +54,12 @@ cs.store(group='crosscoder', name='jumprelu', node=JumpReLUAutoencoderConfig)
 
 
 # ------------------------- globally available var ------------------------- #
-def load_omegaconf(config_name: str = 'config', config_path: str = os.environ.get('CONFIG_PATH', '../../src/configs')):
+def load_omegaconf(config_name: str = os.environ['CONFIG_NAME'], config_path: str = os.environ.get('CONFIG_PATH', '../../src/configs'), overrides: Optional[List[str]] = None):
 
     from hydra import compose, initialize
 
     with initialize(version_base=None, config_path=config_path):
-        cfg = compose(config_name=config_name)
+        cfg = compose(config_name=config_name, overrides=overrides)
 
     # print(OmegaConf.to_yaml(cfg))
 
@@ -56,15 +71,16 @@ def set_config(cfg: Config) -> None:
 
     global CONFIG
 
+
     print()
     print(' '.join(['-' * 25, 'CONFIG', '-' * 25]))
-    print(OmegaConf.to_yaml(cfg, resolve=True))
+    print(OmegaConf.to_yaml(cfg, resolve=True), end='')
     print('-' * 61)
     print()
 
 
     CONFIG = cfg
-    torch.manual_seed(CONFIG.seed)
+    # torch.manual_seed(CONFIG.seed)
     # torch.set_default_dtype(torch.float32)
     # torch.set_default_device('cuda' if torch.cuda.is_available() else 'cpu')
 

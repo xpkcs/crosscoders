@@ -1,19 +1,27 @@
 
 
-from crosscoders.data.dataset import TinyStoriesRayDataset
-# from crosscoders import CONSTANTS
+import hydra
 
+from omegaconf import OmegaConf
 
-def main():
-
-    # file_slice = (0, 100)
-    # train_ds = TinyStoriesRayDataset(s3_prefix=f'tiny-stories-33M/chunks/{file_slice[0]}-{file_slice[1]}/')
-    train_ds = TinyStoriesRayDataset(s3_prefix='tiny-stories-33M/100M/')
-    train_ds.save(train_ds.load())
+from crosscoders.data.dataset import Dataset
 
 
 
 
+def main(cfg):
 
-# if __name__ == '__main__':
-#     main()
+    # print('> loading dataset:')
+    # print(OmegaConf.to_yaml(cfg.runner.dataset, resolve=True), end='\n\n')
+    # ds = hydra.utils.instantiate(cfg.runner.dataset)
+
+    ds = Dataset.instantiate(cfg.runner.dataset)
+
+    print(ds)
+
+
+
+    train_ds = ds.load()
+    # print(train_ds.take_batch(5))
+
+    ds.save(train_ds)

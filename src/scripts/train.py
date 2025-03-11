@@ -24,10 +24,11 @@ import torch
 
 # from crosscoders import CONSTANTS
 # from crosscoders.dataclasses.configs.runner import RunnerConfig
-from crosscoders.autoencoders.runner import Runner, RunnerConfig
-from crosscoders.constants import get_constants
-from crosscoders.data.dataset import TinyStoriesRayDataset, get_s3_keys
-from crosscoders.utils import from_dict, get_config, update_dataclass
+from crosscoders.autoencoders.runner import Runner
+# from crosscoders.constants import get_constants
+from crosscoders.config import get_config
+from crosscoders.data.dataset import Dataset, get_s3_keys
+from crosscoders.utils import from_dict, update_dataclass
 from torch.utils.tensorboard import SummaryWriter
 
 
@@ -42,7 +43,7 @@ import logging
 
 logger = logging.getLogger()
 
-CONSTANTS = get_constants()
+CONSTANTS = get_config()
 
 
 def get_x_scalar(ds, runner_cfg):
@@ -74,31 +75,25 @@ def scale_x(batch, X_SCALAR):
 
 
 
-def train_loop_per_worker(ray_cfg, **kwargs):
+def train_loop_per_worker(cfg, **kwargs):
 
-    ray_tune = 'train_ds' in kwargs
-
-
-    if ray_tune:
-        train_ds = kwargs['train_ds']
-    else:
-        train_ds = ray.train.get_dataset_shard('train')
+    train_ds = ray.train.get_dataset_shard('train')
 
 
 
 
-    # runner config
-    runner_cfg = from_dict(
-        RunnerConfig,
-        get_config(CONSTANTS.CONFIG_FILEPATH).get('RUNNER', {}) | ray_cfg
-    )
+    # # runner config
+    # runner_cfg = from_dict(
+    #     RunnerConfig,
+    #     get_config(CONSTANTS.CONFIG_FILEPATH).get('RUNNER', {}) | ray_cfg
+    # )
 
 
     # update_dataclass(runner_cfg, ray_cfg)
 
 
     # logger.info(runner_cfg)
-    print(runner_cfg)
+    print(cfg)
 
     # if 'scale' in ray_cfg and ray_cfg['scale']:
     # if ray_cfg.get('scale', False):
@@ -117,18 +112,18 @@ def train_loop_per_worker(ray_cfg, **kwargs):
 
 
     # runner
-    runner = Runner(runner_cfg)
+    # runner = Runner(runner_cfg)
+    runner = Runner(cfg)
 
-    if not ray_tune:
-        runner.model = ray.train.torch.prepare_model(runner.model)
+    runner.model = ray.train.torch.prepare_model(runner.model)
 
-    logger.info(str({k: kwargs.get(k) for k in ('X_SCALAR',) if k in kwargs and kwargs.get(k) is not None}))
-    metrics = runner.fit(train_dl, **{k: kwargs.get(k) for k in ('X_SCALAR',) if k in kwargs})
+    # logger.info()
+    metrics = runner.fit(train_dl)
 
     print(metrics)
 
 
-    runner.cleanup()
+    # runner.cleanup()
 
 
     # metrics_dict = {
@@ -159,11 +154,11 @@ def train_loop_per_worker(ray_cfg, **kwargs):
 
 
 
-def main():
+def main(cfg):
 
-    train_ds = TinyStoriesRayDataset().load('activations')
+    ds = Dataset.instantiate(cfg.runner.dataset)
 
-    print(train_ds)
+    print(ds)
 
     # train_dl = train_ds \
     #     .iter_torch_batches(
@@ -181,8 +176,8 @@ def main():
         train_loop_per_worker,
         # train_loop_config=ExperimentConfig(),
         scaling_config=ray.train.ScalingConfig(
-            num_workers=CONSTANTS.EXPERIMENT.NUM_TRAINERS,
             use_gpu=True,
+            num_workers=1,
             resources_per_worker={'CPU': 1, 'GPU': 1}
         ),
         run_config = ray.train.RunConfig(
@@ -190,7 +185,7 @@ def main():
             # storage_path='s3://crosscoders/ray/tiny-stories-33M'
             storage_path='/home/yandy/ray_results/test'
         ),
-        datasets={'train': train_ds}
+        datasets={'train': ds}
     )
     result: ray.train.Result = trainer.fit()
 

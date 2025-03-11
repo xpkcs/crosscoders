@@ -1,17 +1,18 @@
 defaults:
   - _self_
   - base_config
-#   - runner/runner.yaml
 
 
-# globals:
-  # _target_: crosscoders.dataclasses.configs.config.Globals
-
-local: False
-# S3_BUCKET: crosscoders
+# local: False
+# s3_bucket: crosscoders
 # dtype: float32
 # device: cuda
 
 
-paths:
-  config_path: t
+# runner:
+#   input_name: ln2.normalized
+#   output_name: mlp_out
+
+
+# paths:
+#   # config_path:

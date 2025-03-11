@@ -1,0 +1,18 @@
+defaults:
+  - config
+  - runner: data
+  - _self_
+
+
+stage: data
+
+runner:
+
+  input_name: ln2.normalized
+  output_name: mlp_out
+
+  batch_size: 8
+  max_tokens: 1000
+
+  # dataset:
+  #   slice: validation

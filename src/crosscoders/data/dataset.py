@@ -3,14 +3,23 @@
 from typing import Literal
 import boto3
 import datasets
+import hydra
 import ray
 import ray.data
 import numpy as np
+import torch
 
-from crosscoders.constants import CONSTANTS
+from omegaconf import OmegaConf
+
+from crosscoders.config import get_config
 from crosscoders.data.preprocessing import TokenToActivations
 
 import numpy as np
+
+
+CONFIG = get_config()
+
+
 
 
 def get_s3_keys(bucket_name, key_prefix):
@@ -23,66 +32,110 @@ def get_s3_keys(bucket_name, key_prefix):
     ]
 
 
-class TinyStoriesRayDataset:
+class Dataset:
 
-    def __init__(self, hf_dataset_name: str = 'roneneldan/TinyStories', slice: str = 'train', s3_prefix: str = '', bucket_name: str = 'crosscoders') -> None:
+    def __init__(self, name: str = 'roneneldan/TinyStories', slice: str = 'train', prefix: str = '') -> None:
 
-        self.hf_dataset_name = hf_dataset_name
+        self.name = name
         self.slice = slice
-        self.s3_prefix = f'input/{self.hf_dataset_name}/train/{s3_prefix}'
-        self.bucket_name = bucket_name
-        self.rng = np.random.default_rng(seed=314159)
+        self.prefix = f'{CONFIG.paths.tokens_dir.rstrip("/")}/{prefix}/'
+        self.rng = np.random.default_rng(seed=CONFIG.seed)
 
 
-    def load(self, which: Literal['tokens', 'activations'] = 'tokens') -> ray.data.Dataset:
+    @staticmethod
+    def instantiate(cfg):
 
-        match which:
-            case 'tokens':
-                hf_dataset = datasets.load_dataset(self.hf_dataset_name, streaming=True)
-                ds = ray.data.from_huggingface(hf_dataset[self.slice], concurrency=1)
-
-                if CONSTANTS.EXPERIMENT.MAX_RECORDS:
-                    ds = ds.limit(CONSTANTS.EXPERIMENT.MAX_RECORDS)
-
-                ds = ds.map_batches(
-                    TokenToActivations,
-                    batch_size=CONSTANTS.EXPERIMENT.BATCH_SIZE,
-                    # concurrency=(1, 2),
-                    # num_gpus=0.5,
-                    concurrency=1,
-                    num_gpus=1,
-                    num_cpus=1
-                )
-
-
-            case 'activations':
-                keys = get_s3_keys(self.bucket_name, self.s3_prefix)
-                self.rng.shuffle(keys)
-
-                ds = ray.data.read_parquet_bulk(
-                    keys,
-                    # concurrency=1,
-                    ray_remote_args={'num_cpus': 4},
-                    shuffle=ray.data.FileShuffleConfig(seed=314159)
-                )
-
-
-        if CONSTANTS.EXPERIMENT.MAX_TOKENS:
-            ds = ds.limit(CONSTANTS.EXPERIMENT.MAX_TOKENS)
+        print('> instantiating dataset:')
+        print(OmegaConf.to_yaml(cfg, resolve=True), end='\n\n')
+        ds = hydra.utils.instantiate(cfg)
 
 
         return ds
 
 
-    def save(self, ds: ray.data.Dataset, local=False) -> None:
+    # def load(self, which: Literal['tokens', 'activations'] = 'tokens') -> ray.data.Dataset:
 
-        if local:
-            path = f'local://{CONSTANTS.DATA_DIR}/input/{self.hf_dataset_name}/train'
-        else:
-            path = f's3://{self.bucket_name}/{self.s3_prefix}'
+    #     match which:
+    #         case 'tokens':
+    #             device = torch.get_default_device()
+    #             torch.set_default_device('cpu')
+
+    #             hf_dataset = datasets.load_dataset(self.name, streaming=True)
+    #             ds = ray.data.from_huggingface(hf_dataset[self.slice])
+
+    #             # if CONFIG.runner.max_records:
+    #             #     ds = ds.limit(CONFIG.runner.max_records)
+
+    #             ds = ds.map_batches(
+    #                 TokenToActivations,
+    #                 batch_size=CONFIG.runner.batch_size,
+    #                 # concurrency=(1, 2),
+    #                 # num_gpus=0.5,
+    #                 concurrency=1,
+    #                 num_gpus=1,
+    #                 num_cpus=1
+    #             )
+
+    #             torch.set_default_device(device)
+
+
+    #         case 'activations':
+    #             keys = get_s3_keys(CONFIG.s3_bucket, self.prefix)
+    #             self.rng.shuffle(keys)
+
+    #             ds = ray.data.read_parquet_bulk(
+    #                 keys,
+    #                 ray_remote_args={'num_cpus': 1},
+    #                 shuffle=ray.data.FileShuffleConfig(seed=CONFIG.seed)
+    #             )
+
+
+    #     if CONFIG.runner.max_tokens:
+    #         ds = ds.limit(CONFIG.runner.max_tokens)
+
+
+    #     return ds
+
+
+
+
+class TokensDataset(Dataset):
+
+    def load(self) -> ray.data.Dataset:
+
+        device = torch.get_default_device()
+        torch.set_default_device('cpu')
+
+        hf_ds = datasets.load_dataset(self.name, streaming=True)
+        ds = ray.data.from_huggingface(hf_ds[self.slice])
+
+        # if CONFIG.runner.max_records:
+        #     ds = ds.limit(CONFIG.runner.max_records)
+
+        ds = ds.map_batches(
+            TokenToActivations,
+            batch_size=CONFIG.runner.batch_size,
+            # concurrency=(1, 2),
+            # num_gpus=0.5,
+            concurrency=1,
+            num_gpus=1,
+            num_cpus=1
+        )
+
+        torch.set_default_device(device)
+
+
+        if CONFIG.runner.max_tokens:
+            ds = ds.limit(CONFIG.runner.max_tokens)
+
+
+        return ds
+
+
+    def save(self, ds: ray.data.Dataset) -> None:
 
         ds.write_parquet(
-            path,
+            self.prefix,
             compression='zstd',
             # concurrency=6,
             # min_rows_per_file=8192,
@@ -90,3 +143,20 @@ class TinyStoriesRayDataset:
                 'num_cpus': 1
             },
         )
+
+class ActivationsDataset(Dataset):
+
+    def load(self) -> ray.data.Dataset:
+
+        keys = get_s3_keys(CONFIG.s3_bucket, self.prefix)
+        self.rng.shuffle(keys)
+
+        ds = ray.data.read_parquet_bulk(
+            keys,
+            ray_remote_args={'num_cpus': 1},
+            shuffle=ray.data.FileShuffleConfig(seed=CONFIG.seed)
+        )
+
+
+        if CONFIG.runner.max_tokens:
+            ds = ds.limit(CONFIG.runner.max_tokens)

@@ -125,3 +125,14 @@ def flatten_dict(nested_dict, parent_key='', sep='.'):
         else:
             items.append((new_key, v))
     return dict(items)
+
+
+
+import hydra
+from omegaconf import OmegaConf
+
+def load_dataset_object():
+
+    print('> loading dataset:')
+    print(OmegaConf.to_yaml(cfg.runner.dataset, resolve=True), end='\n\n')
+    ds = hydra.utils.instantiate(cfg.runner.dataset)

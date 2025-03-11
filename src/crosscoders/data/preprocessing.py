@@ -10,8 +10,10 @@ import torch
 from transformer_lens import HookedTransformer
 from transformer_lens.utils import get_act_name
 
-from crosscoders.dataclasses.configs.globals import HardwareConfig
+from crosscoders.config import get_config
 
+
+CONFIG = get_config()
 
 
 
@@ -28,9 +30,11 @@ class TokenToActivations:
         self.latent_names = ('ln2.normalized', 'mlp_out', 'resid_post')
 
         self.models = {}
+        device = torch.get_default_device()
+        torch.set_default_device('cpu')
         for mn in model_names:
             self.models[mn] = {}
-            self.models[mn]['model'] = HookedTransformer.from_pretrained(mn)
+            self.models[mn]['model'] = HookedTransformer.from_pretrained(mn, device=CONFIG.device)
             self.models[mn]['hooks'] = [
                 (
                     get_act_name(ln, layer_idx) if '.' not in ln else get_act_name(ln.split('.')[1], layer_idx, ln.split('.')[0]),
@@ -39,7 +43,7 @@ class TokenToActivations:
                 for layer_idx in range(self.models[mn]['model'].cfg.n_layers)
                 for ln in self.latent_names
             ]
-
+        torch.set_default_device(device)
         torch.set_grad_enabled(False)
 
 
@@ -58,11 +62,11 @@ class TokenToActivations:
             for ln in self.latent_names:
                 self.out[f'{mn}.{ln}'] = torch.empty(
                     (*self.out['tokens'].shape, model_info['model'].cfg.n_layers, model_info['model'].cfg.d_model),
-                    **HardwareConfig().asdict()
+                    device=CONFIG.device
                 )
 
             with torch.inference_mode():
-                _ = model_info['model'].run_with_hooks(
+                logits = model_info['model'].run_with_hooks(
                     self.out['tokens'],
                     fwd_hooks=model_info['hooks']
                 )
@@ -73,7 +77,10 @@ class TokenToActivations:
         mask = (col_indices != 0) & (self.out['tokens'] != bos_token)
 
         for k, v in self.out.items():
-            self.out[k] = v[mask]
+            try:
+                self.out[k] = v[mask]
+            except:
+                raise NotImplementedError(k, v.dtype, mask.dtype, v.device, mask.device)
 
 
         # convert tensors to cpu/numpy to be serialized for ray comms
@@ -91,23 +98,6 @@ class TokenToActivations:
 
 
         return out
-
-
-    # def _delete_tensors(self):
-
-    #     del self.latents
-
-
-    # def _init_tensors(self, batch_size: int, seq_len: int):
-
-    #     self.latents = {}
-
-    #     # compose tensors for desired latent_names, add to latents dict
-    #     for ln in self.latent_names:
-    #         self.latents[ln] = torch.empty(
-    #             (self.model.cfg.n_layers, batch_size, seq_len, self.model.cfg.d_model),
-    #             **HardwareConfig().asdict()
-    #         )
 
 
     def store_activation_hook(self, activation, hook, model_name, latent_name, layer_idx):
