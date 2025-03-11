@@ -8,7 +8,7 @@ from crosscoders.abc.model import AutoencoderABC
 
 from torch.nn.functional import relu, tanh
 
-from crosscoders.dataclasses.configs.autoencoders.jumprelu import JumpReLULossMetrics
+from crosscoders.dataclasses.autoencoders.jumprelu import JumpReLULossMetrics
 
 
 

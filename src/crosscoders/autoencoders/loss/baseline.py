@@ -1,11 +1,7 @@
 
 
-
-
-
-
 from crosscoders.autoencoders.loss import dead_neurons, explained_variance
-from crosscoders.dataclasses.configs.autoencoders.baseline import BaselineLossMetrics
+from crosscoders.dataclasses.autoencoders.baseline import BaselineLossMetrics
 
 
 def loss(y, y_hat, x_enc, W_dec, lambda_s) -> BaselineLossMetrics:

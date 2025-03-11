@@ -18,8 +18,8 @@ from crosscoders.abc import AutoencoderRunnerABC
 from crosscoders.autoencoders.schedulers import (get_scheduler_lambda_s,
                                                  get_scheduler_lr)
 from crosscoders.config import get_config
-from crosscoders.dataclasses.configs.autoencoders import LossMetrics
-from crosscoders.dataclasses.configs.config import Config
+from crosscoders.dataclasses.autoencoders import LossMetrics
+from crosscoders.dataclasses.config import Config
 # from crosscoders.dataclasses.configs.runner import RunnerConfig
 # from crosscoders.dataclasses.metrics.loss import LossMetrics
 from crosscoders.utils import dataclass_to_dict, flatten_dict

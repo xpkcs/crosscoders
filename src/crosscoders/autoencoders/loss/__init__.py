@@ -2,7 +2,7 @@
 
 import torch
 
-from crosscoders.dataclasses.configs.autoencoders import DeadNeuronMetrics
+from crosscoders.dataclasses.autoencoders import DeadNeuronMetrics
 
 
 

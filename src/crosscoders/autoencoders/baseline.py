@@ -5,9 +5,9 @@ import torch
 
 from crosscoders.abc.model import AutoencoderABC
 from crosscoders.config import get_config
-from crosscoders.dataclasses.configs.autoencoders import AutoencoderInitConfig
-from crosscoders.dataclasses.configs.autoencoders.baseline import BaselineLossMetrics
-from crosscoders.dataclasses.configs.config import Config
+from crosscoders.dataclasses.autoencoders import AutoencoderInitConfig
+from crosscoders.dataclasses.autoencoders.baseline import BaselineLossMetrics
+from crosscoders.dataclasses.config import Config
 
 CONFIG = get_config()
 

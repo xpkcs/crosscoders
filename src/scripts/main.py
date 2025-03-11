@@ -7,7 +7,7 @@ from pathlib import Path
 # import ray
 import hydra
 
-from crosscoders.dataclasses.configs.config import Config
+from crosscoders.dataclasses.config import Config
 
 # from crosscoders.constants import CONSTANTS, get_constants
 # from ray.runtime_env import RuntimeEnv

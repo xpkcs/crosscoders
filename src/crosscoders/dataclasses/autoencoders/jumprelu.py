@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass, field
 
-from crosscoders.dataclasses.configs.autoencoders import (
+from crosscoders.dataclasses.autoencoders import (
     AutoencoderConfig,
     AutoencoderInitConfig,
     HyperparametersConfig,

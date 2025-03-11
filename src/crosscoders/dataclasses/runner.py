@@ -3,7 +3,7 @@
 from dataclasses import dataclass, field
 from typing import Tuple
 
-from crosscoders.dataclasses.configs.autoencoders.baseline import BaselineModuleConfig
+from crosscoders.dataclasses.autoencoders.baseline import BaselineModuleConfig
 
 
 __all__ = ['RunnerConfig']

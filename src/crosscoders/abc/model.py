@@ -6,7 +6,7 @@ import einops
 import torch
 
 from crosscoders.config import get_config
-from crosscoders.dataclasses.configs.autoencoders import DeadNeuronMetrics
+from crosscoders.dataclasses.autoencoders import DeadNeuronMetrics
 
 
 CONFIG = get_config()

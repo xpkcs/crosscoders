@@ -24,9 +24,9 @@ OmegaConf.register_new_resolver('ifelse', ifelse)
 
 # ------------------------- structured configs ------------------------- #
 
-from crosscoders.dataclasses.configs.config import Config
-from crosscoders.dataclasses.configs.autoencoders.baseline import BaselineAutoencoderConfig
-from crosscoders.dataclasses.configs.autoencoders.jumprelu import JumpReLUAutoencoderConfig
+from crosscoders.dataclasses.config import Config
+from crosscoders.dataclasses.autoencoders.baseline import BaselineAutoencoderConfig
+from crosscoders.dataclasses.autoencoders.jumprelu import JumpReLUAutoencoderConfig
 
 
 cs = ConfigStore.instance()

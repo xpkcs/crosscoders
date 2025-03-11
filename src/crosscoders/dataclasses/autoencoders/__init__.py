@@ -4,8 +4,6 @@ from dataclasses import dataclass
 from omegaconf import MISSING
 
 
-
-
 # @dataclass
 # class InitWdec:
 #     _target_ = torch.nn.init.kaiming_uniform_
@@ -111,11 +109,11 @@ class ModuleConfig:
 
 
 
-from crosscoders.dataclasses.configs.autoencoders.baseline import *
-from crosscoders.dataclasses.configs.autoencoders.jumprelu import *
+from crosscoders.dataclasses.autoencoders.baseline import *
+from crosscoders.dataclasses.autoencoders.jumprelu import *
 
-from crosscoders.dataclasses.configs.autoencoders.baseline import __all__ as __baseline_all__
-from crosscoders.dataclasses.configs.autoencoders.jumprelu import __all__ as __jumprelu_all__
+from crosscoders.dataclasses.autoencoders.baseline import __all__ as __baseline_all__
+from crosscoders.dataclasses.autoencoders.jumprelu import __all__ as __jumprelu_all__
 
 
 __all__ = []
