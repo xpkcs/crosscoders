@@ -1,6 +1,7 @@
 
 
 from dataclasses import dataclass, field
+from enum import Enum
 from typing import Optional, Tuple
 from omegaconf import MISSING, DictConfig, OmegaConf
 import numpy as np
@@ -84,6 +85,16 @@ class TrainingObjective:
     output_name: str = 'resid_post'
 
 
+class JOB_TYPE_ENUM(Enum):
+
+    true: bool = True
+    false: bool = False
+
+    ray: str = 'ray'
+    glue: str = 'glue'
+    # emr: str = 'emr'
+
+
 @dataclass
 class RunnerConfig:
 
@@ -98,7 +109,10 @@ class RunnerConfig:
 
     task: TrainingObjective = field(default_factory=TrainingObjective)
 
-    ray_job: bool = '${globals.ray_job}'
+    job: JOB_TYPE_ENUM = JOB_TYPE_ENUM.false
+    # ray_job: bool = '${globals.ray_job}'
+    # glue_job: bool = '${globals.glue_job}'
+
 
     # dims: DimensionsConfig = field(default_factory=DimensionsConfig)
     # dataset: DatasetConfig = field(default_factory=DatasetConfig)

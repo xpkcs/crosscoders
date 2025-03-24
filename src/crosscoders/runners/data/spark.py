@@ -1,5 +1,6 @@
 
 
+from crosscoders.dataclasses.runner import JOB_TYPE_ENUM
 from crosscoders.runners.data import DataRunner
 
 
@@ -11,7 +12,8 @@ class SparkDataRunner(DataRunner):
 
         super().__init__(**kwargs)
 
-        if self.cfg['glue_job']:
+        if self.cfg['job'] == JOB_TYPE_ENUM.glue:
+
             import sys
 
             from awsglue.utils import getResolvedOptions

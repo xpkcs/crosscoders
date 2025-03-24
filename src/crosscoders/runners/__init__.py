@@ -2,6 +2,8 @@
 
 from abc import abstractmethod
 
+from crosscoders.dataclasses.runner import JOB_TYPE_ENUM
+
 
 
 
@@ -27,7 +29,7 @@ class RayRunner(Runner):
         super().__init__(**kwargs)
 
 
-        if self.cfg['ray_job']:
+        if self.cfg['job'] == JOB_TYPE_ENUM.ray:
 
             import ray, ray.data, ray.runtime_env
 
