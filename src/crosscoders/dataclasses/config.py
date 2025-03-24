@@ -6,7 +6,7 @@ from pathlib import Path
 from omegaconf import MISSING
 import torch
 
-from crosscoders.dataclasses.runner import RunnerConfig
+from crosscoders.dataclasses.runner import DatasetConfig, LanguageModelConfig, RunnerConfig
 
 
 __all__ = ['Paths', 'Config']
@@ -23,33 +23,47 @@ class Paths:
     # PROJECT_ROOT_DIR: str =
 
     # local_prefix: str = '${hydra:runtime.cwd}'
-    __local_prefix: str = Path(__file__).parents[2]
-    __s3_prefix   : str = 's3://${..s3_bucket}'
-    __prefix      : str = '${ifelse:${..local}, ${._Paths__local_prefix}, ${._Paths__s3_prefix}}'
+    __local_prefix : str = Path(__file__).parents[2]
+    __s3_prefix    : str = 's3://${..globals.s3_bucket}'
+    __prefix       : str = '${ifelse:${..globals.local}, ${._Paths__local_prefix}, ${._Paths__s3_prefix}}'
 
     # config_path: str = MISSING
-    data_dir   : str = '${._Paths__prefix}/data'
-    tokens_dir : str = '${.data_dir}/${..runner.dataset.name}/language_model=${..runner.language_model.name}/slice=${..runner.dataset.slice}/tag=${..runner.dataset.prefix}/'
+    data_dir       : str = '${._Paths__prefix}/data'
+    activations_dir: str = '${.data_dir}/${..dataset.name}/language_model=${..language_model.name}/slice=${..dataset.slice}/tag=${..dataset.tag}/'
+
+
+
+@dataclass
+class Globals:
+
+    ray_job  : bool = False
+
+    local    : bool = False
+    s3_bucket: str = 'crosscoders'
+
+    seed  : int = 314159
+    device: str = 'cuda'
+    dtype : str = 'float32'
+
+
+    def __post_init__(self):
+
+        self.dtype = getattr(torch, self.dtype)
 
 
 
 @dataclass
 class Config:
 
-    # stage    : str = MISSING
+    globals: Globals = field(default_factory=Globals)
 
-    local    : bool = False
-    s3_bucket: str = 'crosscoders'
-    paths    : Paths = field(default_factory=Paths)
-    # slice    : str = '${.runner.dataset.slice}'
+    paths: Paths = field(default_factory=Paths)
 
-    seed  : int = 314159
-    device: str = 'cuda'
-    dtype : str = 'float32'
+    language_model: LanguageModelConfig = field(default_factory=LanguageModelConfig)
+
+    dataset: DatasetConfig = field(default_factory=DatasetConfig)
 
     runner: RunnerConfig = field(default_factory=RunnerConfig)
 
 
-    def __post_init__(self):
 
-        self.dtype = getattr(torch, self.dtype)

@@ -1,18 +1,19 @@
 defaults:
-  - _self_
   - base_config
+  - runner: data
+  - _self_
 
 
-# local: False
-# s3_bucket: crosscoders
-# dtype: float32
-# device: cuda
+runner:
+  _target_: 'crosscoders.data.runner.TokensToActivationsDataRunner'
+  input_name: ln2.normalized
+  output_name: mlp_out
+
+  batch_size: 8
+  max_tokens: 1000
 
 
-# runner:
-#   input_name: ln2.normalized
-#   output_name: mlp_out
-
-
-# paths:
-#   # config_path:
+dataset:
+  _target_: 'crosscoders.data.dataset.TokensToActivationsDataset'
+  name: 'roneneldan/TinyStories'
+  tag: 'tiny-stories-33M-1B'

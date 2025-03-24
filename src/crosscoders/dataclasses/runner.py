@@ -5,6 +5,7 @@ from typing import Optional, Tuple
 from omegaconf import MISSING, DictConfig, OmegaConf
 import numpy as np
 
+
 from crosscoders.dataclasses.autoencoders.baseline import BaselineModuleConfig
 
 
@@ -41,33 +42,45 @@ class OptimizerConfig:
 @dataclass
 class DatasetConfig:
 
+    _target_: str = MISSING
     name: str = MISSING
-    prefix: str = ''
-    slice: str = '${ifelse:${eq:${...runner.stage}, "eval"}, "validation", "train"}'
+
+    batch_size: int = '${runner.batch_size}'
+    max_tokens: int = '${runner.max_tokens}'
+
+    slice: str = '${ifelse:${eq:${runner.stage}, "eval"}, "validation", "train"}'
+    activations_dir: str = '${paths.activations_dir}'
+    tag: Optional[str] = ''
 
 
-@dataclass
-class TinyStoriesDatasetConfig(DatasetConfig):
+# @dataclass
+# class TokensToActivationsDatasetConfig(DatasetConfig):
 
-    name: str = 'roneneldan/TinyStories'
-    prefix: str = 'tiny-stories-33M-1B'
-    # slice: str = '${ifelse:${eq:${...stage}, "eval"}, "validation", "train"}'
+#     _target_: str = 'crosscoders.data.dataset.TokensToActivationsDataset'
 
 
-@dataclass
-class TokensDatasetConfig(TinyStoriesDatasetConfig):
+# @dataclass
+# class ActivationsDatasetConfig(DatasetConfig):
 
-    _target_: str = 'crosscoders.data.dataset.TokensDataset'
+#     _target_: str = 'crosscoders.data.dataset.ActivationsDataset'
 
 
-@dataclass
-class ActivationsDatasetConfig(TinyStoriesDatasetConfig):
+# @dataclass
+# class TinyStoriesDatasetConfig(DatasetConfig):
 
-    _target_: str = 'crosscoders.data.dataset.ActivationsDataset'
+#     name: str = 'roneneldan/TinyStories'
+#     tag: str = 'tiny-stories-33M-1B'
+
+# @dataclass
+# class TinyStoriesTokensToActivationsDatasetConfig(TinyStoriesDatasetConfig, TokensToActivationsDatasetConfig):
+#     ...
+
 
 
 @dataclass
 class RunnerConfig:
+
+    _target_: str = MISSING
 
     stage: str = MISSING
 
@@ -79,7 +92,10 @@ class RunnerConfig:
     output_name: str = 'resid_post'
 
     # dims: DimensionsConfig = field(default_factory=DimensionsConfig)
-    dataset: DatasetConfig = field(default_factory=DatasetConfig)
+    # dataset: DatasetConfig = field(default_factory=DatasetConfig)
+    # dataset: DatasetConfig = MISSING
+
+    # language_model: LanguageModelConfig = field(default_factory=LanguageModelConfig)
 
 
     @classmethod
@@ -111,26 +127,33 @@ class DataRunnerConfig(RunnerConfig):
 
     batch_size : int = 48
 
-    dataset: TokensDatasetConfig = field(default_factory=TokensDatasetConfig)
-
-    language_model: LanguageModelConfig = field(default_factory=LanguageModelConfig)
+    dataset: DatasetConfig = '${dataset}'
 
 
-    @classmethod
-    def from_config(cls, cfg: Optional[RunnerConfig] = None, **kwargs: dict) -> None:
+# @dataclass
+# class TokensToActivationsDataRunnerConfig(DataRunnerConfig):
+#     ...
 
-        cfg = super().from_config(cfg, kwargs)
+#     # _target_: str = 'crosscoders.data.runner.TokensToActivationsDataRunner'
 
-        if 'dataset' in cfg:
-            cfg['dataset'] = TokensDatasetConfig(**cfg['dataset'])
-        if 'language_model' in cfg:
-            cfg['language_model'] = LanguageModelConfig(**cfg['language_model'])
+#     # dataset: TinyStoriesTokensToActivationsDatasetConfig = field(default_factory=TinyStoriesTokensToActivationsDatasetConfig)
 
 
-        return cls(**cfg, **kwargs)
+#     # @classmethod
+#     # def from_config(cls, cfg: Optional[RunnerConfig] = None, **kwargs: dict) -> None:
 
-    def __post_init__(self):
-        self.dataset.slice = 'train'
+#     #     cfg = super().from_config(cfg, kwargs)
+
+#     #     if 'dataset' in cfg:    # todo: no hardcode
+#     #         cfg['dataset'] = TinyStoriesTokensToActivationsDatasetConfig(**cfg['dataset'])
+#     #     if 'language_model' in cfg:
+#     #         cfg['language_model'] = LanguageModelConfig(**cfg['language_model'])
+
+
+#     #     return cls(**cfg, **kwargs)
+
+#     # def __post_init__(self):
+#     #     self.dataset.slice = 'train'
 
 
 @dataclass
@@ -140,10 +163,24 @@ class TrainRunnerConfig(RunnerConfig):
 
     batch_size : int = 25000
 
-    dataset: ActivationsDatasetConfig = field(default_factory=ActivationsDatasetConfig)
+    # dataset: ActivationsDatasetConfig = field(default_factory=ActivationsDatasetConfig)
+
 
     optimizer : OptimizerConfig      = field(default_factory=OptimizerConfig)
     crosscoder: BaselineModuleConfig = field(default_factory=BaselineModuleConfig)
+
+
+    # @classmethod
+    # def from_config(cls, cfg: Optional[RunnerConfig] = None, **kwargs: dict) -> None:
+
+    #     cfg = super().from_config(cfg, kwargs)
+
+    #     for k in ('dataset', 'optimizer')
+    #     if 'dataset' in cfg:
+    #         cfg['dataset'] = TokensDatasetConfig(**cfg['dataset'])
+    #     if 'language_model' in cfg:
+    #         cfg['language_model'] = LanguageModelConfig(**cfg['language_model'])
+
 
 
 @dataclass

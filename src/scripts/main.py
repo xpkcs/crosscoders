@@ -2,37 +2,47 @@
 
 
 
+import os
 from pathlib import Path
 
 # import ray
 import hydra
 import click
+from omegaconf import OmegaConf
 import ray.runtime_env
 
 # from crosscoders.config import load_omegaconf
 # from crosscoders.dataclasses.config import Config
 
+# import crosscoders as xc
+from crosscoders.config import CONFIG
+from crosscoders.dataclasses.config import Config
 
 
 
-@click.command()
-@click.option('-s', '--stage',
-              type=click.Choice(['data', 'train', 'tune', 'eval']),
-              default=None,
-              help='Which stage to run',
+# @click.command()
+# @click.option('-s', '--stage',
+#               type=click.Choice(['data', 'train', 'tune', 'eval']),
+#               default=None,
+#               help='Which stage to run',
+# )
+# @click.option('-rj', '--ray-job',
+#               type=bool,
+#               default=False,
+#               help='Whether to run as a ray job. Affects ray.init.',
+# )
+# def main(stage, ray_job) -> None:
+@hydra.main(
+    config_path=os.environ.get('CONFIG_PATH', '../../src/configs'),
+    config_name=os.environ.get('CONFIG_NAME', 'config'),
+    version_base=None
 )
-@click.option('-rj', '--ray-job',
-              type=bool,
-              default=False,
-              help='Whether to run as a ray job. Affects ray.init.',
-)
-def main(stage, ray_job) -> None:
+def main(cfg: Config) -> None:
     '''
     CLI to run the `crosscoders` package.
     '''
 
-
-    if ray_job:
+    if cfg.globals.ray_job:
 
         import ray, ray.data, ray.runtime_env
 
@@ -59,14 +69,20 @@ def main(stage, ray_job) -> None:
 
 
 
-    print(f'> STAGE: {stage}')
+    print(f'> STAGE: {cfg.runner.stage}')
 
-    from crosscoders.config import load_omegaconf
-    cfg = load_omegaconf(stage) # , overrides=[f'++stage=blah'])
+    # from crosscoders.config import load_omegaconf
+    # cfg = load_omegaconf(cfg.runner.stage) # , overrides=[f'++stage=blah'])
+
+    # print(OmegaConf.to_yaml(cfg, resolve=True))
 
 
-    from scripts import data, train   # , eval
-    match stage:
+    # print(f"Working directory : {os.getcwd()}")
+    # print(f"Output directory  : {hydra.core.hydra_config.HydraConfig.get().runtime.output_dir}")
+
+
+    from scripts import data, train#, eval
+    match cfg.runner.stage:
         case 'data':
             data.main(cfg)
 

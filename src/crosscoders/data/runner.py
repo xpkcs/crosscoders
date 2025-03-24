@@ -6,17 +6,27 @@
 
 
 
+from abc import abstractmethod
+
+
 class DataRunner:
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: dict) -> None:
+
+        self.cfg = kwargs
+
         # for k, v in kwargs.items():
         #     setattr(self, k, v)
-        self.cfg = kwargs
+
+
+    @abstractmethod
+    def run(self) -> None:
+        ...
 
 
 class TokensToActivationsDataRunner(DataRunner):
 
-    def run(self):
+    def run(self) -> None:
 
         ds = self.cfg['dataset']
 
@@ -25,10 +35,8 @@ class TokensToActivationsDataRunner(DataRunner):
         print(train_ds)
         # print(train_ds.take_batch(5))
 
-        # ds.save(train_ds)
+        ds.save(train_ds)
 
 
 class SparkDataRunner(DataRunner):
-
-    def __init__(self):
-        super().__init__()
+    ...
