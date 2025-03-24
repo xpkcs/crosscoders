@@ -3,6 +3,10 @@ defaults:
   - dataset/tinystories
   - runner/task/prediction
   - 0.0-activations
+  # - 0.1-shuffle
+  # - 0.2-statistics
+  # - 1.0-train
+  # - 2.0-eval
   - _self_
 
 
