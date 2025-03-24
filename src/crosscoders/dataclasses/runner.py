@@ -78,6 +78,13 @@ class DatasetConfig:
 
 
 @dataclass
+class TrainingObjective:
+
+    input_name : str = 'resid_post'
+    output_name: str = 'resid_post'
+
+
+@dataclass
 class RunnerConfig:
 
     _target_: str = MISSING
@@ -88,14 +95,15 @@ class RunnerConfig:
     max_tokens : int = 1000000000
     max_batches: int = '${ceil:${eval:"${.max_tokens} / ${.batch_size}"}}'
 
-    input_name : str = 'resid_post'
-    output_name: str = 'resid_post'
+
+    task: TrainingObjective = field(default_factory=TrainingObjective)
 
     ray_job: bool = '${globals.ray_job}'
 
     # dims: DimensionsConfig = field(default_factory=DimensionsConfig)
     # dataset: DatasetConfig = field(default_factory=DatasetConfig)
     # dataset: DatasetConfig = MISSING
+    dataset: DatasetConfig = '${dataset}'
 
     # language_model: LanguageModelConfig = field(default_factory=LanguageModelConfig)
 

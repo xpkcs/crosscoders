@@ -33,7 +33,7 @@ class SparkDataRunner(DataRunner):
             ...
 
 
-class SparkShuffleDataRunner(SparkDataRunner):
+class ShuffleDataRunner(SparkDataRunner):
 
     def run(self):
 
@@ -69,7 +69,7 @@ class SparkShuffleDataRunner(SparkDataRunner):
         df.write.parquet(output_path, mode='overwrite')
 
 
-class SparkShuffleDataRunner(SparkDataRunner):
+class StatisticsDataRunner(SparkDataRunner):
 
     def run(self):
 

@@ -97,4 +97,4 @@ def get_config():
 
 
 CONFIG = None
-set_config(load_omegaconf())
+set_config(load_omegaconf(), resolve=True)
