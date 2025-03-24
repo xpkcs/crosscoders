@@ -1,0 +1,7 @@
+dataset:
+  _target_: 'crosscoders.data.dataset.ActivationsDataset'
+
+runner:
+  _target_: 'crosscoders.runners.data.spark.StatisticsDataRunner'
+
+  stage: data

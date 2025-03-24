@@ -1,0 +1,25 @@
+# defaults:
+#   - base_config
+#   - dataset:
+#     - tinystories
+#     - tokenstoactivations
+#   - runner/task/prediction
+#   - _self_
+
+
+dataset:
+  _target_: 'crosscoders.data.dataset.TokensToActivationsDataset'
+
+# dataset:
+#   _target_: 'crosscoders.data.dataset.TokensToActivationsDataset'
+
+runner:
+  _target_: 'crosscoders.runners.data.ray.TokensToActivationsDataRunner'
+
+  stage: data
+
+
+# dataset:
+#   _target_: 'crosscoders.data.dataset.TokensToActivationsDataset'
+#   name: 'roneneldan/TinyStories'
+#   tag: 'tiny-stories-33M-1B'

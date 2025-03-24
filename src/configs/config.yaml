@@ -1,20 +1,12 @@
 defaults:
   - base_config
-  - runner: data
+  - dataset/tinystories
+  - runner/task/prediction
+  - 0.0-activations
   - _self_
 
 
 runner:
-  _target_: 'crosscoders.runners.data.ray.TokensToActivationsDataRunner'
 
   batch_size: 8
   max_tokens: 1000
-
-  input_name: ln2.normalized
-  output_name: mlp_out
-
-
-dataset:
-  _target_: 'crosscoders.data.dataset.TokensToActivationsDataset'
-  name: 'roneneldan/TinyStories'
-  tag: 'tiny-stories-33M-1B'
