@@ -70,14 +70,14 @@ def load_omegaconf(config_name: str = os.environ['CONFIG_NAME'], config_path: st
     return cfg
 
 
-def set_config(cfg: Config) -> None:
+def set_config(cfg: Config, resolve=False) -> None:
 
     global CONFIG
 
 
     print()
     print(' '.join(['-' * 25, 'CONFIG', '-' * 25]))
-    print(OmegaConf.to_yaml(cfg, resolve=True), end='')
+    print(OmegaConf.to_yaml(cfg, resolve=resolve), end='')
     print('-' * 61)
     print()
 
