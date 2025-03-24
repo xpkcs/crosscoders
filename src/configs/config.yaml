@@ -5,12 +5,13 @@ defaults:
 
 
 runner:
-  _target_: 'crosscoders.data.runner.TokensToActivationsDataRunner'
-  input_name: ln2.normalized
-  output_name: mlp_out
+  _target_: 'crosscoders.runners.data.ray.TokensToActivationsDataRunner'
 
   batch_size: 8
   max_tokens: 1000
+
+  input_name: ln2.normalized
+  output_name: mlp_out
 
 
 dataset:

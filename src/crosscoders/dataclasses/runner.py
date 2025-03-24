@@ -91,6 +91,8 @@ class RunnerConfig:
     input_name : str = 'resid_post'
     output_name: str = 'resid_post'
 
+    ray_job: bool = '${globals.ray_job}'
+
     # dims: DimensionsConfig = field(default_factory=DimensionsConfig)
     # dataset: DatasetConfig = field(default_factory=DatasetConfig)
     # dataset: DatasetConfig = MISSING
