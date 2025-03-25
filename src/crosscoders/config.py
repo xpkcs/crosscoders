@@ -4,7 +4,7 @@ import os
 from typing import List, Optional
 
 from hydra.core.config_store import ConfigStore
-from omegaconf import OmegaConf
+from omegaconf import DictConfig, OmegaConf
 import torch
 import numpy as np
 
@@ -70,10 +70,7 @@ def load_omegaconf(config_name: str = os.environ['CONFIG_NAME'], config_path: st
     return cfg
 
 
-def set_config(cfg: Config, resolve=False) -> None:
-
-    global CONFIG
-
+def print_config(cfg, resolve: bool = False) -> None:
 
     print()
     print(' '.join(['-' * 25, 'CONFIG', '-' * 25]))
@@ -82,13 +79,19 @@ def set_config(cfg: Config, resolve=False) -> None:
     print()
 
 
+def set_config(cfg) -> None:
+
+    global CONFIG
+
+    # print_config(**kwargs)
+
     CONFIG = cfg
     # torch.manual_seed(CONFIG.seed)
     # torch.set_default_dtype(torch.float32)
     # torch.set_default_device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
-def get_config():
+def get_config() -> DictConfig:
 
     if CONFIG is None:
         raise RuntimeError('global config not set')
@@ -97,4 +100,4 @@ def get_config():
 
 
 CONFIG = None
-set_config(load_omegaconf(), resolve=True)
+set_config(load_omegaconf())
