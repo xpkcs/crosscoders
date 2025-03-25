@@ -12,5 +12,5 @@ defaults:
 
 runner:
 
-  batch_size: 8
+  batch_size: 32  # laptop, 5.9GB VRAM for 0.0-activations
   max_tokens: 1000
