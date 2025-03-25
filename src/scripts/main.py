@@ -53,8 +53,14 @@ def main(cfg: Config) -> None:
     # print(OmegaConf.to_yaml(cfg, resolve=True))
 
 
+    hydra_output_dir = hydra.core.hydra_config.HydraConfig.get().runtime.output_dir
     # print(f"Working directory : {os.getcwd()}")
-    # print(f"Output directory  : {hydra.core.hydra_config.HydraConfig.get().runtime.output_dir}")
+    print(f'Hydra output directory  : {hydra_output_dir}')
+
+    os.chdir(hydra_output_dir)
+
+    OmegaConf.save(cfg, 'config.yml')
+    OmegaConf.save(cfg, 'config-resolved.yml', resolve=True)
 
 
     from scripts import data, train#, eval
