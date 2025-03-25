@@ -21,20 +21,20 @@ CONFIG = get_config()
 
 class TokenToActivations:
 
-    # def __init__(self, model_names: Iterable[str] = ('gpt2-small', 'gpt-neo-125M')):
-    def __init__(self, model_names: Iterable[str] = ('tiny-stories-33M',)):
+    def __init__(self,
+        # model_names: Iterable[str] = ('gpt2-small', 'gpt-neo-125M'),
+        model_names: Iterable[str] = ('tiny-stories-33M',),
+        latent_names: Iterable[str] = ('resid_mid', 'ln2.normalized', 'mlp_out', 'resid_post')
+    ):
 
-        # self.latent_names = ('attn_out', 'resid_mid', 'mlp_out', 'resid_post')
-        # self.latent_names = ('resid_post',)
-        # self.latent_names = ('resid_mid', 'mlp_out')
-        self.latent_names = ('ln2.normalized', 'mlp_out', 'resid_post')
+        self.latent_names = latent_names
 
-        self.models = {}
         device = torch.get_default_device()
         torch.set_default_device('cpu')
+        self.models = {}
         for mn in model_names:
             self.models[mn] = {}
-            self.models[mn]['model'] = HookedTransformer.from_pretrained(mn, device=CONFIG.device)
+            self.models[mn]['model'] = HookedTransformer.from_pretrained(mn, device=CONFIG.globals.device)
             self.models[mn]['hooks'] = [
                 (
                     get_act_name(ln, layer_idx) if '.' not in ln else get_act_name(ln.split('.')[1], layer_idx, ln.split('.')[0]),
@@ -47,7 +47,7 @@ class TokenToActivations:
         torch.set_grad_enabled(False)
 
 
-    def __call__(self, batch: Dict[str, np.ndarray]) -> Dict[str, np.ndarray]:
+    def __call__(self, batch: Dict[str, np.ndarray], shuffle = 'sequences', convert_to_np_first = True) -> Dict[str, np.ndarray]:
 
         tokenizer_model = next(iter(self.models.values()))['model']
 
@@ -62,7 +62,7 @@ class TokenToActivations:
             for ln in self.latent_names:
                 self.out[f'{mn}.{ln}'] = torch.empty(
                     (*self.out['tokens'].shape, model_info['model'].cfg.n_layers, model_info['model'].cfg.d_model),
-                    device=CONFIG.device
+                    device=CONFIG.globals.device
                 )
 
             with torch.inference_mode():
@@ -73,28 +73,107 @@ class TokenToActivations:
 
 
         bos_token = tokenizer_model.to_single_token(tokenizer_model.tokenizer.bos_token)
-        col_indices = torch.arange(self.out['tokens'].shape[1]).unsqueeze(0).expand_as(self.out['tokens']).to(self.out['tokens'].device)
-        mask = (col_indices != 0) & (self.out['tokens'] != bos_token)
 
-        for k, v in self.out.items():
-            try:
-                self.out[k] = v[mask]
-            except:
-                raise NotImplementedError(k, v.dtype, mask.dtype, v.device, mask.device)
 
+        # # TODO: so hacky
 
         # convert tensors to cpu/numpy to be serialized for ray comms
         for k in self.out:
             if isinstance(self.out[k], torch.Tensor):
-                # TODO: replace this with specified types per key
-                if k == 'tokens':
-                    self.out[k] = self.out[k].cpu().numpy().astype(np.int32)
-                else:
-                    self.out[k] = self.out[k].cpu().numpy().astype(np.float32)
 
+                cpu_tensor = self.out[k].cpu()
+
+                # TODO: replace this with specified types per key
+                match k:
+                    case 'tokens':
+                        target_dtype = np.int32
+                    case _:
+                        target_dtype = np.float32
+
+                if cpu_tensor.dtype == torch.float32 and target_dtype == np.float32:
+                    self.out[k] = cpu_tensor.numpy()
+                else:
+                    self.out[k] = cpu_tensor.numpy().astype(target_dtype, copy=False)
+
+                del cpu_tensor
+
+
+
+
+        match shuffle:
+
+            case 'tokens':
+
+                if convert_to_np_first:
+                    col_indices = np.arange(self.out['tokens'].shape[1])[np.newaxis, :]
+                    col_indices = np.broadcast_to(col_indices, self.out['tokens'].shape)
+
+                else:
+                    col_indices = torch.arange(self.out['tokens'].shape[1]).unsqueeze(0).expand_as(self.out['tokens']).to(self.out['tokens'].device)
+
+
+                # mask = (col_indices == 0) | (self.out['tokens'] != bos_token)
+                mask = (col_indices != 0) & (self.out['tokens'] != bos_token)
+
+                for k, v in self.out:
+                    self.out[k] = self.out[k][mask]
+
+            case 'sequences':
+
+                mask = (self.out['tokens'] != bos_token)
+
+                if convert_to_np_first:
+                    last_idx = np.maximum(np.argmax(mask[:, ::-1], axis=1), 0)
+
+                else:
+                    last_idx = mask.flip(1).int().argmax(dim=1)
+
+
+                last_idx = self.out['tokens'].shape[1] - 1 - last_idx
+
+                all_padding = ~mask.any(1)
+                assert (~all_padding).all().item()
+
+
+                for k in self.out:
+                    self.out[k] = [self.out[k][i , :idx + 1] for i, idx in enumerate(last_idx)]
+
+
+
+
+
+        # # convert tensors to cpu/numpy to be serialized for ray comms
+        # for k in self.out:
+        #     if isinstance(self.out[k], torch.Tensor):
+
+        #         cpu_tensor = self.out[k].cpu()
+
+        #         # TODO: replace this with specified types per key
+        #         match k:
+        #             case 'tokens':
+        #                 target_dtype = np.int32
+        #             case _:
+        #                 target_dtype = np.float32
+
+        #         if cpu_tensor.dtype == torch.float32 and target_dtype == np.float32:
+        #             self.out[k] = cpu_tensor.numpy()
+        #         else:
+        #             self.out[k] = cpu_tensor.numpy().astype(target_dtype, copy=False)
+
+        #         del cpu_tensor
+
+
+
+        # print({k: (type(v), (len(v), '*', *v[0].shape[1:])) for k, v in self.out.items()}, flush=True)
+
+        # raise NotImplementedError({k: (type(v), (len(v), '*', *v[0].shape[1:])) for k, v in self.out.items()})
+
+        # for k, in self.out:
+        #     assert self.out(v)
 
         out = self.out
         del self.out
+        self.out = None
 
 
         return out
