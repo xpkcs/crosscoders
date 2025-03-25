@@ -15,14 +15,18 @@ dynamic = ["dependencies", "optional-dependencies"]
 
 [tool.setuptools.dynamic]
 dependencies = {file = ["requirements.txt"]}
-# optional-dependencies = {file = []}
+
+[tool.setuptools.dynamic.optional-dependencies]
+dev = { file = ["requirements-dev.txt"] }
+spark = { file = ["requirements-spark.txt"] }
+
 
 [project.scripts]
 xc = "scripts.main:main"
 
 
 [build-system]
-requires = ["setuptools"]
+requires = ["setuptools"]   # ["setuptools>=66.0"]
 build-backend = "setuptools.build_meta"
 
 
