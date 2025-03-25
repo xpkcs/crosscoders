@@ -120,7 +120,7 @@ class TokensToActivationsDataset(Dataset):
             # concurrency=(1, 2),
             concurrency=1,
             num_gpus=1,
-            num_cpus=1
+            num_cpus=2
         )
 
         torch.set_default_device(device)
