@@ -5,11 +5,11 @@
 import os
 import tempfile
 import datasets
-import lightning as pl
+# import lightning as pl
 from omegaconf import OmegaConf
 import ray
 import ray.train, ray.train.torch
-import ray.train.lightning
+# import ray.train.lightning
 from ray.train.torch import TorchTrainer
 from ray.runtime_env import RuntimeEnv
 
