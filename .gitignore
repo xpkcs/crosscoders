@@ -184,3 +184,5 @@ conda/**
 **/.*
 
 !src/configs/env
+outputs
+outputs/**
