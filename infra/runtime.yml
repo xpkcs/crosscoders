@@ -1,6 +1,0 @@
-working_dir: src
-conda: crosscoders
-# pip: requirements.txt
-env_vars:
-  # PROJECT_ROOT_DIR: "."
-  # CONFIG_FILEPATH: "./scripts/configs/train.yml"
