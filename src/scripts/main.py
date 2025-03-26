@@ -1,23 +1,13 @@
 #!/usr/bin/env python3
 
 
-
 import os
 from pathlib import Path
 
-import hydra
-import click
-from omegaconf import OmegaConf
-
-
-# from crosscoders.config import load_omegaconf
-
-
-from crosscoders.config import CONFIG, print_config
-from crosscoders.dataclasses.config import Config
 
 
 
+# import click
 # @click.command()
 # @click.option('-s', '--stage',
 #               type=click.Choice(['data', 'train', 'tune', 'eval']),
@@ -31,6 +21,12 @@ from crosscoders.dataclasses.config import Config
 # )
 # def main(stage, ray_job) -> None:
 
+
+import hydra
+from omegaconf import OmegaConf
+from crosscoders.dataclasses.config import Config
+
+
 @hydra.main(
     config_path=os.environ.get('CONFIG_PATH', str((Path(__file__).parent / '../../src/configs').resolve())),
     config_name=os.environ.get('CONFIG_NAME', 'config'),
@@ -41,28 +37,25 @@ def main(cfg: Config) -> None:
     CLI to run the `crosscoders` package.
     '''
 
-    # from crosscoders.config import set_config
-    # set_config(cfg)
+    from crosscoders.config import print_config, get_config, set_config
 
-    print_config(cfg, resolve=True)
+    set_config(cfg)
+    CONFIG = get_config()
 
 
     print(f'> STAGE: {cfg.runner.stage}')
 
-    # from crosscoders.config import load_omegaconf
-    # cfg = load_omegaconf(cfg.runner.stage) # , overrides=[f'++stage=blah'])
+    print_config(CONFIG, resolve=True)
 
-    # print(OmegaConf.to_yaml(cfg, resolve=True))
+    print(f'current directory: {os.getcwd()}')
+    print(f'hydra output directory: {hydra.core.hydra_config.HydraConfig.get().runtime.output_dir}')
 
-
-    hydra_output_dir = hydra.core.hydra_config.HydraConfig.get().runtime.output_dir
-    # print(f"Working directory : {os.getcwd()}")
-    print(f'Hydra output directory  : {hydra_output_dir}')
-
-    os.chdir(hydra_output_dir)
+    os.chdir(hydra.core.hydra_config.HydraConfig.get().runtime.output_dir)
 
     OmegaConf.save(cfg, 'config.yml')
     OmegaConf.save(cfg, 'config-resolved.yml', resolve=True)
+
+
 
 
     from scripts import data, train#, eval

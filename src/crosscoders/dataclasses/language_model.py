@@ -13,9 +13,9 @@ from omegaconf import MISSING
 @dataclass
 class LanguageModelConfig:
 
-    name    : str = ''
-    n_layers: int = 0
-    d_model : int = 0
+    name    : str = MISSING
+    n_layers: int = MISSING
+    d_model : int = MISSING
 
 
 @dataclass

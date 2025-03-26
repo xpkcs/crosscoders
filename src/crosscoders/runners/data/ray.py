@@ -2,6 +2,7 @@
 
 
 
+from crosscoders.data.dataset import Dataset
 from crosscoders.runners.data import RayDataRunner
 
 
@@ -9,11 +10,14 @@ class TokensToActivationsDataRunner(RayDataRunner):
 
     def run(self) -> None:
 
-        ds = self.cfg['dataset']
+        # self.cfg['dataset'][k] =
+        ds = Dataset(self.cfg['dataset'])
 
-        train_ds = ds.load()
+        # print(ds)
+
+        train_ds = ds.load('tokens')
 
         print(train_ds)
-        # print(train_ds.take_batch(5))
+        # # print(train_ds.take_batch(5))
 
-        ds.save(train_ds)
+        # ds.save(train_ds)

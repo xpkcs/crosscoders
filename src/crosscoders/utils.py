@@ -2,6 +2,7 @@
 
 
 
+import os
 from pathlib import Path
 from typing import Any, Dict
 import yaml
@@ -139,11 +140,21 @@ from omegaconf import OmegaConf
 
 
 
-def instantiate(cfg, resolve: bool = False):
+def instantiate(cfg, resolve: bool = False, recursive: bool = False):
 
     print('> instantiating class:')
     print(OmegaConf.to_yaml(cfg, resolve=resolve), end='\n\n')
-    _ = hydra.utils.instantiate(cfg)
+    _ = hydra.utils.instantiate(cfg, recursive=recursive)
 
 
     return _
+
+
+
+
+def check_required_env_vars(env_vars = [
+    'CONFIG_NAME',
+]):
+    for ev in env_vars:
+        assert ev in os.environ
+

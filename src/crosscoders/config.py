@@ -8,7 +8,8 @@ from omegaconf import DictConfig, OmegaConf
 import torch
 import numpy as np
 
-from crosscoders.dataclasses.dataset import ActivationsDatasetConfig, TinyStoriesDatasetConfig, TokensToActivationsDatasetConfig
+from crosscoders.dataclasses.dataset import TinyStoriesDatasetConfig
+from crosscoders.dataclasses.datasource import HuggingFaceDatasourceConfig, S3DatasourceConfig
 from crosscoders.dataclasses.language_model import TinyStories33MLanguageModelConfig
 
 
@@ -56,8 +57,6 @@ cs.store(group='crosscoder', name='baseline', node=BaselineAutoencoderConfig)
 cs.store(group='crosscoder', name='jumprelu', node=JumpReLUAutoencoderConfig)
 # cs.store(name='args', node=ArgsConfig)
 
-cs.store(group='dataset', name='TokensToActivations', node=TokensToActivationsDatasetConfig)
-cs.store(group='dataset', name='Activations', node=ActivationsDatasetConfig)
 
 cs.store(group='runner', name='RayDataRunner', node=RayDataRunnerConfig)
 cs.store(group='runner', name='SparkDataRunner', node=SparkDataRunnerConfig)
@@ -66,6 +65,10 @@ cs.store(group='runner/training_objective', name='prediction', node=PredictionTr
 
 cs.store(group='language_model', name='tiny-stories-33M', node=TinyStories33MLanguageModelConfig)
 cs.store(group='dataset', name='tiny-stories', node=TinyStoriesDatasetConfig)
+
+
+cs.store(group='dataset/datasource', name='hf', node=HuggingFaceDatasourceConfig(which='tokens'))
+cs.store(group='dataset/datasource', name='s3', node=S3DatasourceConfig(which='activations'))
 
 
 

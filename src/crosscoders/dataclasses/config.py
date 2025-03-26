@@ -29,7 +29,8 @@ class Paths:
     __prefix       : str = '${ifelse:${..globals.local}, ${._Paths__local_prefix}, ${._Paths__s3_prefix}}'
 
     # config_path: str = MISSING
-    data_dir       : str = '${._Paths__prefix}/data'
+    # data_dir       : str = '${._Paths__prefix}/data'
+    data_dir       : str = 'data'
     activations_dir: str = '${.data_dir}/${..dataset.name}/language_model=${..language_model.name}/slice=${..dataset.slice}/tag=${..dataset.tag}/'
 
 
@@ -37,7 +38,7 @@ class Paths:
 @dataclass
 class Globals:
 
-    ray_job  : bool = False
+    # ray_job  : bool = False
 
     local    : bool = False
     s3_bucket: str = 'crosscoders'

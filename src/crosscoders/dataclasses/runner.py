@@ -61,8 +61,8 @@ class OptimizerConfig:
 @dataclass
 class TrainingObjectiveConfig:
 
-    input_name : str = ''
-    output_name: str = ''
+    input_name : str = MISSING
+    output_name: str = MISSING
 
 
 @dataclass
@@ -92,9 +92,9 @@ class JOB_TYPE_ENUM(Enum):
 @dataclass
 class RunnerConfig:
 
-    _target_: str = MISSING
-
     stage: str = MISSING
+
+    _target_: str = MISSING
 
     batch_size : int = MISSING
     max_tokens : int = 1000000000
