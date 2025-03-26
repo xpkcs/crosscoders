@@ -5,12 +5,18 @@
 from crosscoders.data.dataset import Dataset
 from crosscoders.runners.data import RayDataRunner
 
+from crosscoders.config import Config, get_config
+
+CONFIG: Config = get_config()
+
+
+
 
 class TokensToActivationsDataRunner(RayDataRunner):
 
     def run(self) -> None:
 
-        ds = Dataset(self.cfg['dataset'])
+        ds = Dataset(CONFIG.dataset)
 
         # print(ds)
 

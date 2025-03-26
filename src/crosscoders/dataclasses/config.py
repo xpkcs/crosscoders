@@ -7,7 +7,7 @@ from omegaconf import MISSING
 import torch
 
 from crosscoders.dataclasses.language_model import LanguageModelConfig
-from crosscoders.dataclasses.runner import DatasetConfig, RunnerConfig
+from crosscoders.dataclasses.runner import BatchConfig, DatasetConfig, RunnerConfig
 
 
 __all__ = ['Paths', 'Config']
@@ -60,6 +60,8 @@ class Config:
     globals: Globals = field(default_factory=Globals)
 
     paths: Paths = field(default_factory=Paths)
+
+    batch: BatchConfig = field(default_factory=BatchConfig)
 
     language_model: LanguageModelConfig = field(default_factory=LanguageModelConfig)
 

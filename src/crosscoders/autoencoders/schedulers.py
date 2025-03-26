@@ -2,14 +2,14 @@
 
 import torch
 
-from crosscoders.config import get_config
+from crosscoders.config import Config, get_config
 
-CONSTANTS = get_config()
-
-
+CONFIG: Config = get_config()
 
 
-def get_scheduler_lr(optimizer, total_steps=CONSTANTS.runner.max_batches, decay_start_fraction=0.8):
+
+
+def get_scheduler_lr(optimizer, total_steps=CONFIG.batch.n_batches, decay_start_fraction=0.8):
 
     def lr_linear_tail(current_step):
 
@@ -25,7 +25,7 @@ def get_scheduler_lr(optimizer, total_steps=CONSTANTS.runner.max_batches, decay_
     return torch.optim.lr_scheduler.LambdaLR(optimizer, lr_linear_tail)
 
 
-def get_scheduler_lambda_s(lambda_s_max, total_steps=CONSTANTS.runner.max_batches):
+def get_scheduler_lambda_s(lambda_s_max, total_steps=CONFIG.batch.n_batches):
 
     def lambda_s_linear(current_step):
 

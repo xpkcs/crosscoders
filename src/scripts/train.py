@@ -110,7 +110,7 @@ def train_loop_per_worker(cfg, **kwargs):
 
     # dataloader
     train_dl = train_ds.iter_torch_batches(
-        batch_size=CONFIG.runner.batch_size,
+        batch_size=CONFIG.batch.batch_size,
         # local_shuffle_buffer_size=10 * CONFIG.EXPERIMENT.BATCH_SIZE,
         # local_shuffle_seed=314159
     )

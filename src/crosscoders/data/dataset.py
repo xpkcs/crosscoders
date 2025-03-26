@@ -61,15 +61,7 @@ class S3Datasource(Datasource):
         )
 
 
-
 class HuggingFaceDatasource(Datasource):
-
-    _target_: str = 'crosscoders.data.dataset.HuggingFaceDatasource._load'
-
-    # org: str = MISSING
-    # repo: str = MISSING
-    # slice: str = MISSING
-
 
     @abstractmethod
     # def _load(org, repo, slice, **kwargs):
@@ -94,52 +86,29 @@ class Dataset:
         self.cfg: DatasetConfig = cfg
 
 
-    # def _load_tokens(self):
+    def load(self, which: Literal['tokens', 'activations'] = 'tokens', shuffle_level='sequences') -> ray.data.Dataset:
 
-    #     ds = hydra.utils.call(self.cfg.datasource)
-
-    #     return ds.map_batches(
-    #         TokenToActivations,
-    #         batch_size=self.cfg.batch_size,
-    #         concurrency=1,
-    #         num_gpus=1,
-    #         num_cpus=1
-    #     )
+        # ds = self.cfg.datasource
+        ds = hydra.utils.call(self.cfg.datasource)
 
 
-    # def _load_activations(self):
-
-    #     ds = S3Datasource._load(
-    #         bucket_name=CONFIG.globals.s3_bucket,
-    #         key_prefix=CONFIG.paths.activations_dir.replace(f's3://{CONFIG.globals.s3_bucket}', '')
-    #     )
-
-    #     return ds
-
-
-    def load(self, which: Literal['tokens', 'activations'] = 'tokens') -> ray.data.Dataset:
-
-        # ds = hydra.utils.call(self.cfg.datasource)
-        ds = self.cfg.datasource
-
-
-        # ds = getattr(self, f'_load_{which}')()
         match which:
             case 'tokens':
                 ds = ds.map_batches(
                     TokenToActivations,
-                    batch_size=self.cfg.batch_size,
+                    batch_size=CONFIG.batch.batch_size,
                     concurrency=1,
                     num_gpus=1,
-                    num_cpus=1
+                    num_cpus=1,
+                    zero_copy_batch=True
                 )
+
 
             case 'activations':
                 pass
 
 
-        if self.cfg.max_tokens:
-            ds = ds.limit(self.cfg.max_tokens)
+        ds = ds.limit(CONFIG.batch.n_records)
 
 
         return ds

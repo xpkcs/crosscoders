@@ -5,7 +5,6 @@ from typing import List, Optional
 
 from hydra.core.config_store import ConfigStore
 from omegaconf import DictConfig, OmegaConf
-import torch
 import numpy as np
 
 from crosscoders.dataclasses.dataset import TinyStoriesDatasetConfig
@@ -41,7 +40,7 @@ OmegaConf.register_new_resolver('ceil', ceil)
 
 # from crosscoders.dataclasses.args import ArgsConfig
 from crosscoders.dataclasses.config import Config
-from crosscoders.dataclasses.runner import DataRunnerConfig, PredictionTrainingObjective, RayDataRunnerConfig, ReconstructionTrainingObjective, RunnerConfig, SparkDataRunnerConfig, TrainRunnerConfig, EvalRunnerConfig
+from crosscoders.dataclasses.runner import BatchConfig, DataRunnerConfig, PredictionTrainingObjective, RayDataRunnerConfig, ReconstructionTrainingObjective, RunnerConfig, SparkDataRunnerConfig, TrainRunnerConfig, EvalRunnerConfig
 from crosscoders.dataclasses.autoencoders.baseline import BaselineAutoencoderConfig
 from crosscoders.dataclasses.autoencoders.jumprelu import JumpReLUAutoencoderConfig
 
@@ -69,6 +68,14 @@ cs.store(group='dataset', name='tiny-stories', node=TinyStoriesDatasetConfig)
 
 cs.store(group='dataset/datasource', name='hf', node=HuggingFaceDatasourceConfig(which='tokens'))
 cs.store(group='dataset/datasource', name='s3', node=S3DatasourceConfig(which='activations'))
+
+
+
+cs.store(group='batch', name='token', node=BatchConfig(type='token', max_seq_len=1))
+cs.store(group='batch', name='sequence', node=BatchConfig(type='sequence'))
+
+
+
 
 
 
@@ -117,3 +124,12 @@ def get_config() -> DictConfig:
 
 CONFIG = None
 set_config(load_omegaconf())
+
+
+__all__ = [
+    'Config',
+    'load_omegaconf',
+    'print_config',
+    'set_config',
+    'get_config',
+]

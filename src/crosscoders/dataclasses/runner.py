@@ -90,16 +90,35 @@ class JOB_TYPE_ENUM(Enum):
 
 
 @dataclass
+class BatchConfig:
+
+    type       : str = MISSING
+    batch_size : int = MISSING
+
+    max_seq_len: int = '${ifelse:${eq:${.type}, "token"}, 1, ${language_model.n_context}}'
+
+    n_tokens   : int = 1000000000 # 1B
+    n_seqs: int = '${ceil:${eval:"${.n_tokens} / ${.max_seq_len}"}}'
+
+    n_batches: int = '${ceil:${eval:"${.n_seqs} / ${.batch_size}"}}'
+    n_records: int = '${ifelse:${eq:${.type}, "token"}, ${.n_tokens}, ${.n_seqs}}'
+
+
+
+
+
+@dataclass
 class RunnerConfig:
 
     stage: str = MISSING
 
     _target_: str = MISSING
 
-    batch_size : int = MISSING
-    max_tokens : int = 1000000000
-    max_batches: int = '${ceil:${eval:"${.max_tokens} / ${.batch_size}"}}'
+    # batch_size    : int = MISSING
+    # n_tokens    : int = 1000000000
+    # n_tokens_seq: int = 512 # max seq len
 
+    # batch: BatchConfig = field(default_factory=BatchConfig)
 
     training_objective: TrainingObjectiveConfig = field(default_factory=TrainingObjectiveConfig)
 
@@ -111,7 +130,7 @@ class RunnerConfig:
     # dims: DimensionsConfig = field(default_factory=DimensionsConfig)
     # dataset: DatasetConfig = field(default_factory=DatasetConfig)
     # dataset: DatasetConfig = MISSING
-    dataset: DatasetConfig = '${dataset}'
+    # dataset: DatasetConfig = '${dataset}'
 
     # language_model: LanguageModelConfig = field(default_factory=LanguageModelConfig)
 
@@ -142,11 +161,6 @@ class RunnerConfig:
 class DataRunnerConfig(RunnerConfig):
 
     stage: str = 'data'
-
-    batch_size : int = 48
-
-    dataset: DatasetConfig = '${dataset}'
-
 
 
 @dataclass
@@ -189,7 +203,7 @@ class TrainRunnerConfig(RunnerConfig):
 
     stage: str = 'train'
 
-    batch_size : int = 25000
+    # batch_size : int = 25000
 
     # dataset: ActivationsDatasetConfig = field(default_factory=ActivationsDatasetConfig)
 
@@ -216,5 +230,5 @@ class EvalRunnerConfig(DataRunnerConfig, TrainRunnerConfig):
 
     stage: str = 'eval'
 
-    batch_size : int = 25000
+    # batch_size : int = 25000
 
