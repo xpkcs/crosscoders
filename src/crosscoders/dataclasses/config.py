@@ -6,7 +6,8 @@ from pathlib import Path
 from omegaconf import MISSING
 import torch
 
-from crosscoders.dataclasses.runner import DatasetConfig, LanguageModelConfig, RunnerConfig
+from crosscoders.dataclasses.language_model import LanguageModelConfig
+from crosscoders.dataclasses.runner import DatasetConfig, RunnerConfig
 
 
 __all__ = ['Paths', 'Config']

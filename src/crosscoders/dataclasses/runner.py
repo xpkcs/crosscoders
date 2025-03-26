@@ -8,6 +8,7 @@ import numpy as np
 
 
 from crosscoders.dataclasses.autoencoders.baseline import BaselineModuleConfig
+from crosscoders.dataclasses.dataset import DatasetConfig
 
 
 __all__ = ['RunnerConfig']
@@ -24,14 +25,6 @@ __all__ = ['RunnerConfig']
 
 
 @dataclass
-class LanguageModelConfig:
-
-    name    : str = 'tiny-stories-33M'
-    n_layers: int = 4
-    d_model : int = 768
-
-
-@dataclass
 class OptimizerConfig:
 
     _target_: str = 'torch.optim.Adam'
@@ -39,19 +32,6 @@ class OptimizerConfig:
     betas   : Tuple[float,float] = (.9,.999)
     fused   : bool = True
 
-
-@dataclass
-class DatasetConfig:
-
-    _target_: str = MISSING
-    name: str = MISSING
-
-    batch_size: int = '${runner.batch_size}'
-    max_tokens: int = '${runner.max_tokens}'
-
-    slice: str = '${ifelse:${eq:${runner.stage}, "eval"}, "validation", "train"}'
-    activations_dir: str = '${paths.activations_dir}'
-    tag: Optional[str] = ''
 
 
 # @dataclass
@@ -79,10 +59,24 @@ class DatasetConfig:
 
 
 @dataclass
-class TrainingObjective:
+class TrainingObjectiveConfig:
+
+    input_name : str = ''
+    output_name: str = ''
+
+
+@dataclass
+class ReconstructionTrainingObjective(TrainingObjectiveConfig):
 
     input_name : str = 'resid_post'
     output_name: str = 'resid_post'
+
+
+@dataclass
+class PredictionTrainingObjective(TrainingObjectiveConfig):
+
+    input_name : str = 'ln2.normalized'
+    output_name: str = 'mlp_out'
 
 
 class JOB_TYPE_ENUM(Enum):
@@ -107,7 +101,7 @@ class RunnerConfig:
     max_batches: int = '${ceil:${eval:"${.max_tokens} / ${.batch_size}"}}'
 
 
-    task: TrainingObjective = field(default_factory=TrainingObjective)
+    training_objective: TrainingObjectiveConfig = field(default_factory=TrainingObjectiveConfig)
 
     job: JOB_TYPE_ENUM = JOB_TYPE_ENUM.false
     # ray_job: bool = '${globals.ray_job}'
@@ -152,6 +146,16 @@ class DataRunnerConfig(RunnerConfig):
     batch_size : int = 48
 
     dataset: DatasetConfig = '${dataset}'
+
+
+
+@dataclass
+class RayDataRunnerConfig(DataRunnerConfig):
+    ...
+
+@dataclass
+class SparkDataRunnerConfig(DataRunnerConfig):
+    ...
 
 
 # @dataclass
