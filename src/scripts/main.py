@@ -13,7 +13,7 @@ from omegaconf import OmegaConf
 # from crosscoders.config import load_omegaconf
 
 
-from crosscoders.config import CONFIG
+from crosscoders.config import CONFIG, print_config
 from crosscoders.dataclasses.config import Config
 
 
@@ -32,7 +32,7 @@ from crosscoders.dataclasses.config import Config
 # def main(stage, ray_job) -> None:
 
 @hydra.main(
-    config_path=os.environ.get('CONFIG_PATH', '../../src/configs'),
+    config_path=os.environ.get('CONFIG_PATH', str((Path(__file__).parent / '../../src/configs').resolve())),
     config_name=os.environ.get('CONFIG_NAME', 'config'),
     version_base=None
 )
@@ -43,6 +43,8 @@ def main(cfg: Config) -> None:
 
     # from crosscoders.config import set_config
     # set_config(cfg)
+
+    print_config(cfg, resolve=True)
 
 
     print(f'> STAGE: {cfg.runner.stage}')

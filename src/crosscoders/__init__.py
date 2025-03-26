@@ -11,7 +11,7 @@ from crosscoders.config import print_config, get_config, set_config
 from crosscoders import abc, autoencoders, dataclasses
 
 
-print_config(get_config(), resolve=True)
+# print_config(get_config(), resolve=True)
 
 
 
