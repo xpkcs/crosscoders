@@ -10,7 +10,6 @@ class TokensToActivationsDataRunner(RayDataRunner):
 
     def run(self) -> None:
 
-        # self.cfg['dataset'][k] =
         ds = Dataset(self.cfg['dataset'])
 
         # print(ds)
@@ -20,4 +19,4 @@ class TokensToActivationsDataRunner(RayDataRunner):
         print(train_ds)
         # # print(train_ds.take_batch(5))
 
-        # ds.save(train_ds)
+        ds.save(train_ds)
