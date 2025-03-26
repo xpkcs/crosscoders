@@ -14,11 +14,11 @@ dynamic = ["dependencies", "optional-dependencies"]
 
 
 [tool.setuptools.dynamic]
-dependencies = {file = ["requirements.txt"]}
+dependencies = {file = ["requirements/core.txt"]}
 
 [tool.setuptools.dynamic.optional-dependencies]
-dev = { file = ["requirements-dev.txt"] }
-spark = { file = ["requirements-spark.txt"] }
+dev = { file = ["requirements/dev.txt"] }
+spark = { file = ["requirements/spark.txt"] }
 
 
 [project.scripts]
