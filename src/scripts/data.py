@@ -1,5 +1,6 @@
 
 
+from crosscoders.runners import Runner
 from crosscoders.utils import instantiate
 
 
@@ -15,7 +16,9 @@ def main(cfg):
     # copy dataset config under runner's so that runner can use it
     # cfg.runner.dataset = '${dataset}'
 
-    runner = instantiate(cfg.runner, True)
+    # ray.data.DataContext.get_current().enable_operator_progress_bars = False
+
+    runner: Runner = instantiate(cfg.runner, True)
     runner.run()
 
 
