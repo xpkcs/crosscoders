@@ -26,6 +26,19 @@ import hydra
 from omegaconf import OmegaConf
 from crosscoders.dataclasses.config import Config
 
+import logging
+from rich import print as printr
+from rich.logging import RichHandler
+from rich.text import Text
+
+# logging.basicConfig(
+#     format='%(message)s',
+#     level='NOTSET',
+#     datefmt="[%X]",
+#     handlers=[RichHandler(markup=True)],
+# )
+# log = logging.getLogger('rich')
+
 
 @hydra.main(
     config_path=os.environ.get('CONFIG_PATH', str((Path(__file__).parent / '../../src/configs').resolve())),
@@ -42,20 +55,17 @@ def main(cfg: Config) -> None:
     set_config(cfg)
     CONFIG = get_config()
 
-
-    print(f'> STAGE: {cfg.runner.stage}')
+    printr(f'[bold red]>>>[/] [bold green]STAGE:[/] {cfg.runner.stage}')
 
     print_config(CONFIG, resolve=True)
 
-    print(f'current directory: {os.getcwd()}')
-    print(f'hydra output directory: {hydra.core.hydra_config.HydraConfig.get().runtime.output_dir}')
+    printr(f'[bold red]>>>[/] current directory: {os.getcwd()}')
+    printr(f'[bold red]>>>[/] hydra   directory: {hydra.core.hydra_config.HydraConfig.get().runtime.output_dir}')
 
     os.chdir(hydra.core.hydra_config.HydraConfig.get().runtime.output_dir)
 
     OmegaConf.save(cfg, 'config.yml')
     OmegaConf.save(cfg, 'config-resolved.yml', resolve=True)
-
-
 
 
     from scripts import data, train#, eval

@@ -4,8 +4,10 @@ import os
 from typing import List, Optional
 
 from hydra.core.config_store import ConfigStore
-from omegaconf import DictConfig, OmegaConf
+from omegaconf import DictConfig, OmegaConf, open_dict
 import numpy as np
+
+from rich import print as printr
 
 from crosscoders.dataclasses.dataset import TinyStoriesDatasetConfig
 from crosscoders.dataclasses.datasource import HuggingFaceDatasourceConfig, S3DatasourceConfig
@@ -93,13 +95,42 @@ def load_omegaconf(config_name: str = os.environ['CONFIG_NAME'], config_path: st
     return cfg
 
 
-def print_config(cfg, resolve: bool = False) -> None:
+def print_config(cfg, resolve: bool = False, rich: bool = True) -> None:
 
-    print()
-    print(' '.join(['-' * 25, 'CONFIG', '-' * 25]))
-    print(OmegaConf.to_yaml(cfg, resolve=resolve), end='')
-    print('-' * 61)
-    print()
+    cfg_dict = OmegaConf.to_container(cfg, resolve=True)
+    cfg_dict['paths']['_Paths__prefix'] = '[magenta]' + str(cfg.paths._Paths__prefix) + '[/]'
+    cfg_dict['paths']['activations_dir'] = '[magenta]' + str(cfg.paths.activations_dir) + '[/]'
+    cfg_dict['batch']['batch_size'] = '[sea_green1]' + str(cfg.batch.batch_size) + '[/]'
+    cfg_dict['batch']['n_tokens'] = '[sea_green1]' + str(cfg.batch.n_tokens) + '[/]'
+    cfg_dict['dataset']['datasource']['which'] = '[red]' + str(cfg.dataset.datasource.which) + '[/]'
+    cfg_dict['runner']['stage'] = '[red]' + str(cfg.runner.stage) + '[/]'
+    cfg_dict['runner']['_target_'] = (lambda i: ''.join([
+            str(cfg.runner._target_[:i]), '[red]', str(cfg.runner._target_[i:]), '[/]'
+        ]))(cfg.runner._target_.rfind(".") + 1)
+
+
+    # cfg_yaml = OmegaConf.to_yaml(cfg, resolve=True)
+    cfg_yaml = OmegaConf.to_yaml(cfg_dict)
+
+
+    if rich:
+
+        from rich.console import Console
+
+        console = Console(highlight=False)
+
+        console.print()
+        console.print('[bold light_steel_blue3]' + ' '.join(['-' * 25, 'CONFIG', '-' * 25]) + '[/]')
+        console.print(cfg_yaml, end='')
+        console.print('[bold light_steel_blue3]' + '-' * 61 + '[/]')
+        console.print()
+
+    else:
+        print()
+        print(' '.join(['-' * 25, 'CONFIG', '-' * 25]))
+        print(OmegaConf.to_yaml(cfg, resolve=resolve), end='')
+        print('-' * 61)
+        print()
 
 
 def set_config(cfg) -> None:
