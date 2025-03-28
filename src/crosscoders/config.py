@@ -29,11 +29,12 @@ def ceil(i):
 
     return int(np.ceil(float(i)))
 
-OmegaConf.register_new_resolver('eval', eval)
-OmegaConf.register_new_resolver('eq', eq)
-OmegaConf.register_new_resolver('ifelse', ifelse)
-OmegaConf.register_new_resolver('ceil', ceil)
-OmegaConf.register_new_resolver('range', lambda n: list(range(int(n))))
+replace = True
+OmegaConf.register_new_resolver('eval', eval, replace=replace)
+OmegaConf.register_new_resolver('eq', eq, replace=replace)
+OmegaConf.register_new_resolver('ifelse', ifelse, replace=replace)
+OmegaConf.register_new_resolver('ceil', ceil, replace=replace)
+OmegaConf.register_new_resolver('range', lambda n: list(range(int(n))), replace=replace)
 
 
 

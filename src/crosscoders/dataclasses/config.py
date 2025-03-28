@@ -8,7 +8,7 @@ import torch
 
 from crosscoders.dataclasses.language_model import LanguageModelConfig
 from crosscoders.dataclasses.runner import BatchConfig, DatasetConfig, RunnerConfig
-from crosscoders.dataclasses.runner import ActivationsConfig, DatasetConfig, LanguageModelConfig, RunnerConfig
+from crosscoders.dataclasses.runner import ActivationsConfig, DatasetConfig, RunnerConfig
 
 
 __all__ = ['Paths', 'Config']
@@ -49,9 +49,9 @@ class Globals:
     dtype : str = 'float32'
 
 
-    def __post_init__(self):
+    # def __post_init__(self):
 
-        self.dtype = getattr(torch, self.dtype)
+    #     self.dtype = getattr(torch, self.dtype)
 
 
 

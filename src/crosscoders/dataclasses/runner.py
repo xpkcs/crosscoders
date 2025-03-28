@@ -27,7 +27,7 @@ __all__ = ['RunnerConfig']
 @dataclass
 class ActivationsConfig:
 
-    names: list[str] = field(default_factory=lambda: ['resid_mid', 'ln2.normalized', 'mlp_out', 'resid_post'])
+    types: list[str] = field(default_factory=lambda: ['resid_mid', 'ln2.normalized', 'mlp_out', 'resid_post'])
     layers: Optional[list[int]] = '${range:${language_model.n_layers}}'
 
 

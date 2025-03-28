@@ -26,6 +26,7 @@ CONFIG: Config = get_config()
 class TokenToActivations:
 
     def __init__(self,
+        # layers: Iterable[int],
         # model_names: Iterable[str] = ('gpt2-small', 'gpt-neo-125M'),
         model_names: Iterable[str] = ('tiny-stories-33M',),
         latent_names: Iterable[str] = ('resid_mid', 'ln2.normalized', 'mlp_out', 'resid_post')
@@ -161,6 +162,7 @@ class TokenToActivations:
 
 
                 for k in self.batch_out:
+                    # self.batch_out[k] = self.batch_out[k][:,:CONFIG.batch.max_seq_len]
                     self.batch_out[k] = self.batch_out[k].cpu().numpy().astype(self.dtypes[k])
                     self.batch_out[k] = [self.batch_out[k][i , :idx + 1] for i, idx in enumerate(last_idx)]
 
