@@ -8,6 +8,7 @@ import torch
 
 from crosscoders.dataclasses.language_model import LanguageModelConfig
 from crosscoders.dataclasses.runner import BatchConfig, DatasetConfig, RunnerConfig
+from crosscoders.dataclasses.runner import ActivationsConfig, DatasetConfig, LanguageModelConfig, RunnerConfig
 
 
 __all__ = ['Paths', 'Config']
@@ -64,6 +65,8 @@ class Config:
     batch: BatchConfig = field(default_factory=BatchConfig)
 
     language_model: LanguageModelConfig = field(default_factory=LanguageModelConfig)
+
+    activations: ActivationsConfig = field(default_factory=ActivationsConfig)
 
     dataset: DatasetConfig = field(default_factory=DatasetConfig)
 

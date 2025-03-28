@@ -33,6 +33,7 @@ OmegaConf.register_new_resolver('eval', eval)
 OmegaConf.register_new_resolver('eq', eq)
 OmegaConf.register_new_resolver('ifelse', ifelse)
 OmegaConf.register_new_resolver('ceil', ceil)
+OmegaConf.register_new_resolver('range', lambda n: list(range(int(n))))
 
 
 
