@@ -2,19 +2,22 @@ boto3
 # dask[distributed]
 # deepspeed
 einops
+# h5py
 hydra-core
+hydra-zen
 hyperopt
 # lightning
+lmdb
 # nnsight
 numpy
 omegaconf
 python-dotenv
 ray[default,data,train,tune]
 s3fs
+# sae-lens
 tensorboard
 torch~=2.6.0
 torch_tb_profiler
 tqdm
-
-# sae-lens
 transformer-lens>=2.0.0
+zarr
