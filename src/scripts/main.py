@@ -68,17 +68,18 @@ def main(cfg: Config) -> None:
     OmegaConf.save(cfg, 'config-resolved.yml', resolve=True)
 
 
-    from scripts import data, train#, eval
     match cfg.runner.stage:
         case 'data':
-            data.main(cfg)
+            from scripts.data import main
 
         case 'train':
-            train.main(cfg)
+            from scripts.train import main
 
         case 'eval':
+            # from scripts.eval import main
             ...
 
+    main(cfg)
 
 
 

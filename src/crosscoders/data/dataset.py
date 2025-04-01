@@ -70,8 +70,8 @@ class HuggingFaceDatasource(Datasource):
         device = torch.get_default_device()
         torch.set_default_device('cpu')
 
-        hf_dataset = datasets.load_dataset(f"{kwargs['org']}/{kwargs['repo']}", streaming=True)
-        ds = ray.data.from_huggingface(hf_dataset[kwargs['slice']])
+        hf_dataset = datasets.load_dataset(f"{kwargs['org']}/{kwargs['repo']}", streaming=True, split=kwargs['slice'])
+        ds = ray.data.from_huggingface(hf_dataset)
 
         torch.set_default_device(device)
 
@@ -91,6 +91,8 @@ class Dataset:
         # ds = self.cfg.datasource
         ds = hydra.utils.call(self.cfg.datasource)
 
+        # ds = ds.limit(CONFIG.batch.n_records)
+
 
         match which:
             case 'tokens':
@@ -100,15 +102,17 @@ class Dataset:
                     concurrency=1,
                     num_gpus=1,
                     num_cpus=1,
+                    memory=10*1024*1024*1024,
                     zero_copy_batch=True
                 )
+
+                # ds = ds.limit(CONFIG.batch.n_records * len(CONFIG.activations.types) * len(CONFIG.activations.layers))
 
 
             case 'activations':
                 pass
 
 
-        ds = ds.limit(CONFIG.batch.n_records)
 
 
         return ds
@@ -117,6 +121,7 @@ class Dataset:
     def save(self, ds: ray.data.Dataset) -> None:
 
         print(f'saving activations @ {CONFIG.paths._Paths__prefix}/{CONFIG.paths.activations_dir}', flush=True)
+        # print(f'saving activations @ /home/ec2-user/crosscoders/{CONFIG.paths.activations_dir}', flush=True)
 
         ds.write_parquet(
             f'{CONFIG.paths._Paths__prefix}/{CONFIG.paths.activations_dir}',
@@ -126,3 +131,16 @@ class Dataset:
                 'num_cpus': 1
             },
         )
+
+
+        # ds.write_parquet(
+        #     f'{CONFIG.paths._Paths__prefix}/{CONFIG.paths.activations_dir}',
+        #     compression='zstd',
+        #     # min_rows_per_file=8192,
+        #     min_rows_per_file=256,   # seqs
+        #     concurrency=3,
+        #     ray_remote_args={
+        #         'num_cpus': 2,
+        #         'memory': 4 * 1024 * 1024 * 1024
+        #     },
+        # )

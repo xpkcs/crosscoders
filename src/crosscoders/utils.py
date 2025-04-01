@@ -5,6 +5,7 @@
 import os
 from pathlib import Path
 from typing import Any, Dict
+import torch
 import yaml
 
 
@@ -158,3 +159,138 @@ def check_required_env_vars(env_vars = [
     for ev in env_vars:
         assert ev in os.environ
 
+
+
+
+
+# def convert_activation_dict(data):
+#     # Original tokens tensor with shape [B, T]
+#     tokens = data['tokens']  # e.g. shape: [10, 213]
+#     B, T = tokens.shape
+
+#     # Define the activation keys in the order you want them to appear.
+#     act_keys = [
+#         'tiny-stories-33M.resid_mid',
+#         'tiny-stories-33M.ln2.normalized',
+#         'tiny-stories-33M.mlp_out',
+#         'tiny-stories-33M.resid_post'
+#     ]
+
+#     activations_list = []
+#     activation_types = []  # This will store an integer label for each activation type.
+#     layer_ids = []         # This will store the layer index (from the third dimension).
+
+#     for act_type, key in enumerate(act_keys):
+#         # Each tensor x has shape: [B, T, L, D]
+#         x = data[key]
+#         B_, T_, L, D = x.shape  # B_ should equal B, and T_ equals T.
+
+#         # Permute to bring the L dimension next to B so that we can flatten them together.
+#         # Option 1: transpose tokens and layers: from [B, T, L, D] -> [B, L, T, D]
+#         x = x.transpose(1, 2)  # Now shape is [B, L, T, D]
+#         # Then flatten the first two dimensions: [B * L, T, D]
+#         x_reshaped = x.reshape(B * L, T, D)
+#         activations_list.append(x_reshaped)
+
+#         # Create activation type vector: each row in x_reshaped gets the current act_type label.
+#         activation_types.append(torch.full((B * L,), act_type, dtype=torch.long))
+
+#         # Create layer indices for each sample.
+#         # For each sample in B, we have layers 0...L-1.
+#         layer_ids.append(torch.arange(L).unsqueeze(0).repeat(B, 1).reshape(-1))
+
+#     # Concatenate along the flattened batch dimension.
+#     activations = torch.cat(activations_list, dim=0)      # shape: [B * (# act keys) * L, T, D]
+#     activation_type = torch.cat(activation_types, dim=0)    # shape: [B * (# act keys) * L]
+#     layer = torch.cat(layer_ids, dim=0)                     # shape: [B * (# act keys) * L]
+
+#     # For tokens, replicate each token sequence for each corresponding activation.
+#     # tokens: [B, T] -> [B, (# act keys) * L, T] then reshape to [B * (# act keys) * L, T]
+#     tokens_repeated = tokens.unsqueeze(1).repeat(1, len(act_keys) * L, 1).reshape(B * len(act_keys) * L, T)
+
+#     return {
+#         'tokens': tokens_repeated,          # shape: [4 * 4 * 10, 213] i.e. [160, 213]
+#         'activations': activations,         # shape: [160, 213, 768]
+#         'activation_type': activation_type, # shape: [160]
+#         'layer': layer                      # shape: [160]
+#     }
+
+import numpy as np
+def convert_activation_dict(data):
+    # Original tokens array with shape [B, T]
+    tokens = data['tokens']  # e.g. shape: [10, 213]
+    B, T = tokens.shape
+
+    # Define the activation keys in the order you want them to appear.
+    act_keys = [
+        'resid_mid',
+        'ln2.normalized',
+        'mlp_out',
+        'resid_post'
+    ]
+
+    activations_list = []
+    activation_types = []  # This will store an integer label for each activation type.
+    layer_ids = []         # This will store the layer index (from the third dimension).
+
+    for act_type, key in enumerate(act_keys):
+        # Each array x has shape: [B, T, L, D]
+        x = data[key]
+        B_, T_, L, D = x.shape  # B_ should equal B, and T_ equals T.
+
+        # Permute to bring the L dimension next to B so that we can flatten them together.
+        # Option 1: transpose tokens and layers: from [B, T, L, D] -> [B, L, T, D]
+        x = np.transpose(x, (0, 2, 1, 3))  # Now shape is [B, L, T, D]
+        # Then flatten the first two dimensions: [B * L, T, D]
+        x_reshaped = x.reshape(B * L, T, D)
+        activations_list.append(x_reshaped)
+
+        # Create activation type vector: each row in x_reshaped gets the current act_type label.
+        # activation_types.append(np.full((B * L,), act_type, dtype=np.int64))
+        activation_types.append(np.full((B * L,), key, dtype=object))
+
+        # Create layer indices for each sample.
+        # For each sample in B, we have layers 0...L-1.
+        layer_ids.append(np.tile(np.arange(L).reshape(1, -1), (B, 1)).reshape(-1))
+
+    # Concatenate along the flattened batch dimension.
+    activations = np.concatenate(activations_list, axis=0)      # shape: [B * (# act keys) * L, T, D]
+    activation_type = np.concatenate(activation_types, axis=0)    # shape: [B * (# act keys) * L]
+    layer = np.concatenate(layer_ids, axis=0)                     # shape: [B * (# act keys) * L]
+
+    # For tokens, replicate each token sequence for each corresponding activation.
+    # tokens: [B, T] -> [B, (# act keys) * L, T] then reshape to [B * (# act keys) * L, T]
+    tokens_repeated = np.tile(tokens[:, np.newaxis, :], (1, len(act_keys) * L, 1)).reshape(B * len(act_keys) * L, T)
+
+    return {
+        'tokens': tokens_repeated,          # shape: [4 * 4 * 10, 213] i.e. [160, 213]
+        'activations': activations,         # shape: [160, 213, 768]
+        'activation_type': activation_type, # shape: [160]
+        'layer': layer                      # shape: [160]
+    }
+
+
+
+import boto3
+def delete_files_in_s3(bucket_name, prefix, dry_run=False):
+    s3 = boto3.client('s3')
+
+    response = s3.list_objects_v2(Bucket=bucket_name, Prefix=prefix, Delimiter='/')
+
+    if 'Contents' in response:
+        files = [{'Key': obj['Key']} for obj in response['Contents'] if obj['Key'].endswith('.parquet')]
+        print(f'deleting {len(files)} files')
+        # print(files)
+        if not dry_run:
+            s3.delete_objects(Bucket=bucket_name, Delete={'Objects': files, 'Quiet': False})
+
+        # for obj in response['Contents']:
+        #     if obj['Key'].endswith('.parquet'):
+        #         print(f"Deleting: {obj['Key']}")
+        #         if not dry_run:
+        #             s3.delete_object(Bucket=bucket_name, Key=obj['Key'])
+    else:
+        print("No Parquet files found in the specified path.")
+
+# _ = delete_files_in_s3('crosscoders', 'data/tiny-stories-v1/language_model=tiny-stories-33M/slice=train/tag=tiny-stories-33M-1B/activations/')
+# _
