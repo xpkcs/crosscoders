@@ -1,0 +1,4 @@
+# dask[distributed]
+hyperopt
+# lightning
+ray[default,data,train,tune]~=2.9

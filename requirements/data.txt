@@ -1,0 +1,7 @@
+boto3
+# dask[distributed]
+datasets~=3.4 # 2.14.6
+# h5py
+# lmdb
+# s3fs>=2024.6
+zarr

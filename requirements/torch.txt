@@ -1,0 +1,9 @@
+# deepspeed
+einops
+# lightning
+# nnsight
+# sae-lens
+tensorboard
+torch~=2.6.0
+torch_tb_profiler
+transformer-lens>=2.0.0

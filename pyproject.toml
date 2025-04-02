@@ -7,18 +7,36 @@ description = ""
 # ]
 
 requires-python = ">=3.9"
-license = { text = "MIT" }
+# license = ""
 readme = "README.md"
 
 dynamic = ["dependencies", "optional-dependencies"]
 
 
 [tool.setuptools.dynamic]
-dependencies = {file = ["requirements/core.txt"]}
+dependencies = {file = ["requirements/core.txt", "requirements/data.txt"]}
 
 [tool.setuptools.dynamic.optional-dependencies]
 dev = { file = ["requirements/dev.txt"] }
+ray = { file = ["requirements/ray.txt"] }
+torch = { file = ["requirements/torch.txt"] }
 spark = { file = ["requirements/spark.txt"] }
+
+ray-cpu = { file = [
+    "requirements/ray.txt",
+] }
+ray-gpu = { file = [
+    "requirements/ray.txt",
+    "requirements/torch.txt",
+] }
+all = { file = [
+    "requirements/dev.txt",
+    "requirements/core.txt",
+    "requirements/data.txt",
+    "requirements/ray.txt",
+    "requirements/torch.txt",
+    "requirements/spark.txt",
+] }
 
 
 [project.scripts]
