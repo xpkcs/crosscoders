@@ -1,19 +1,19 @@
 services:
-  head:
-    image: crosscoders/ray/head:1.0
+  ray-head:
+    image: 300348151897.dkr.ecr.us-east-1.amazonaws.com/crosscoders/ray:head-1.0
     container_name: ray-head
 
-    build:
+    build: &build
       context: .
       dockerfile: ray.Dockerfile
       args:
-        - ACCELERATOR=gpu
+        - ACCELERATOR=cpu
 
-    ports:
-      - 8080:8080
-      - 6379:6379
-      - 8265:8265
-      - 3000:3000
+    # ports:
+    #   - 8080:8080
+    #   - 6379:6379
+    #   - 8265:8265
+    #   - 3000:3000
 
     # environment:
     #   - CONFIG_PATH=/app/src/config
@@ -21,3 +21,12 @@ services:
     # volumes:
     #   - .:/app
       # - /app/node_modules # Prevent host node_modules from overwriting container's
+
+  ray-worker-gpu:
+    image: 300348151897.dkr.ecr.us-east-1.amazonaws.com/crosscoders/ray:worker-gpu-1.0
+    container_name: ray-worker-gpu
+
+    build:
+      <<: *build
+      args:
+        - ACCELERATOR=cpu
