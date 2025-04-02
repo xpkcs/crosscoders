@@ -1,6 +1,7 @@
 ARG RAY_VERSION="latest"
 ARG ACCELERATOR="cpu"
 FROM rayproject/ray:${RAY_VERSION}-py312-${ACCELERATOR}
+ARG ACCELERATOR="cpu"
 
 # -------------------------------------------------- #
 
