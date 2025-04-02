@@ -15,7 +15,7 @@ CONFIG: Config = get_config()
 
 
 zarr_dir = f'{CONFIG.paths._Paths__s3_prefix}/{CONFIG.paths.activations_dir}'
-zarr_dir = '/home/ec2-user/crosscoders/zarr_dir'
+# zarr_dir = '/home/ec2-user/crosscoders/zarr_dir'
 batch_size = 5
 
 
@@ -26,16 +26,16 @@ import numpy as np
 from collections import defaultdict
 
 
-@ray.remote(num_cpus=1, memory=2 * 1024 * 1024 * 1024)
+@ray.remote(num_cpus=1, memory=120 / 16 * 1024 * 1024 * 1024)
 class PartitionWriter:
 
-    def __init__(self, zarr_dir, d_model):
+    def __init__(self, zarr_dir, layer, activation_type, d_model):
 
         self.root = zarr.group(zarr_dir, overwrite=False)
-        self.array = self.root
+        self.array = self.root[f'layer={layer}/activation_type={activation_type}/raw']
         # self.offset = self.array.shape[0]
         self.offset = 0
-        self.offset = {(l, at): 0 for l in CONFIG.activations.layers for at in CONFIG.activations.types}
+        # self.offset = {(l, at): 0 for l in CONFIG.activations.layers for at in CONFIG.activations.types}
 
         self.d_model = d_model
 
@@ -48,7 +48,7 @@ class PartitionWriter:
     #         self.array[f'activation_type={at}/raw'].resize((self.offset, self.d_model))
 
 
-    def append_batch(self, batch):
+    def append_batch(self, rows):
         """
         rows: a list of dictionaries, each with keys 'activations', 'layer', 'activation_type'
         Returns a list of meta updates, each as [start_index, n_tokens]
@@ -58,18 +58,18 @@ class PartitionWriter:
         # for l in CONFIG.activations.layers:
         #     for at in CONFIG.activations.types:
 
-        # for row in rows:
-        #     n_tokens = row['activations'].shape[0]
+        for row in rows:
+            n_tokens = row.shape[0]
 
-        #     self.array[f'layer={row["layer"]}/activation_type={row["activation_type"]}/raw'].resize((self.offset[(row['layer'], row['activation_type'])] + n_tokens, self.d_model))
-        #     self.array[f'layer={row["layer"]}/activation_type={row["activation_type"]}/raw'][self.offset[(row['layer'], row['activation_type'])]:self.offset[(row['layer'], row['activation_type'])] + n_tokens] = row['activations']
+            self.array.resize((self.offset + n_tokens, self.d_model))
+            self.array[self.offset:self.offset + n_tokens] = row
 
-        #     meta_updates += [[self.offset[(row['layer'], row['activation_type'])], n_tokens]]
-        #     self.offset[(row['layer'], row['activation_type'])] += n_tokens
+            meta_updates += [[self.offset, n_tokens]]
+            self.offset += n_tokens
         return meta_updates
 
 
-@ray.remote(num_cpus=0.1, memory=0.5 * 1024 * 1024 * 1024)
+@ray.remote(num_cpus=1, memory=1 * 1024 * 1024 * 1024)
 class MetaWriter:
 
     def __init__(self, zarr_dir):
@@ -89,17 +89,22 @@ class MetaWriter:
         self.offset += n_new
 
 
+root, zarrays = ZarrIO.init(CONFIG.paths.zarr_dir)
+print(CONFIG.paths.zarr_dir)
+print(pformat(zarrays))
+print(pformat(root.tree()))
+
 
 # -----------------------------------------------------------------------------
 # Assume CONFIG is available and zarr_dir is the path or URL to your Zarr store.
 # Create one partition writer per (layer, activation_type)
 partition_writers = {}
-# for layer in CONFIG.activations.layers:
-#     for activation_type in CONFIG.activations.types:
-#         partition_writers[(layer, activation_type)] = PartitionWriter.remote(
-#             zarr_dir, layer, activation_type, CONFIG.language_model.d_model
-#         )
-partition_writers = PartitionWriter.remote(zarr_dir, CONFIG.language_model.d_model)
+for layer in CONFIG.activations.layers:
+    for activation_type in CONFIG.activations.types:
+        partition_writers[(layer, activation_type)] = PartitionWriter.remote(
+            zarr_dir, layer, activation_type, CONFIG.language_model.d_model
+        )
+# partition_writers = PartitionWriter.remote(zarr_dir, CONFIG.language_model.d_model)
 # partition_writers = {}
 # for layer in CONFIG.activations.layers:
 #     partition_writers[layer] = PartitionWriter.remote(
@@ -111,6 +116,56 @@ partition_writers = PartitionWriter.remote(zarr_dir, CONFIG.language_model.d_mod
 
 # Create the meta writer actor.
 meta_writer = MetaWriter.remote(zarr_dir)
+
+
+@ray.remote(num_cpus=1, memory=1 * 1024 * 1024 * 1024)
+def __call__(batch):
+
+
+    activations = defaultdict(list)
+    # tokens = defaultdict(lambda: {
+    #     'activation_type': [],
+    #     'activations': []
+    # })
+
+    for i in range(batch['tokens'].shape[0]):
+        # row = {k: v[i] for k, v in batch.items()}
+
+        for l in CONFIG.activations.layers:
+            for at in CONFIG.activations.types:
+
+                activations[(l, at)] += [batch[at][i][:(batch['tokens'][i] != batch['tokens'][i][0]).sum() + 1,l,:]]
+                # activations[l] += [{
+                # #     'seq_id': row['seq_id'].item(),
+                # #     'pos_id': row['pos_id'].item(),
+                #     # 'layer': l,
+                #     'activation_type': at,
+                #     'activations': row[at][:(row['tokens'] != row['tokens'][0]).sum() + 1,l,:]
+                # }]
+                # tokens[l]['activation_type'] += [at]
+                # tokens[l]['activations'] += [row[at][:,l,:]]
+
+    # print(tokens)
+    print('done building remote args')
+
+    # # done, ready = ray.wait([
+    # #     partition_writers[key].append_batch.remote(rows)
+    # #     for key, rows in activations.items()
+    # # ], num_returns=1)
+    # # print(done)
+
+    seq_metadata = ray.get([
+        partition_writers[key].append_batch.remote(rows)
+        for key, rows in activations.items()
+    ])
+
+    # # seq_metadata = ray.get(done[0])
+    print(pformat(seq_metadata))
+
+    # # ready += [meta_writer.append_batch.remote(seq_metadata)]
+    ray.get(meta_writer.append_batch.remote(seq_metadata[0]))
+
+    print('done with batch')
 
 
 
@@ -125,9 +180,6 @@ def main(cfg):
     # ds.save(ray_ds)
 
 
-    root, zarrays = ZarrIO.init(zarr_dir)
-    print(pformat(zarrays))
-    print(pformat(root.tree()))
 
 
     # Control the number of concurrent batch processing tasks
@@ -140,23 +192,9 @@ def main(cfg):
 
     for batch_idx, batch in enumerate(ray_ds.iter_batches(batch_size=batch_size, batch_format='default')):
 
+        pending_tasks += [__call__.remote(batch)]
 
 
-        pass
-        # if batch_idx == 10:
-        #     break
-
-        # print({k: len(v) for k, v in batch.items()})
-
-        # pending_tasks += [partition_writers.append_batch.remote(batch)]
-
-
-        # if len(pending_tasks) >= max_concurrent:
-        #     done, pending_tasks = ray.wait(pending_tasks, num_returns=max_concurrent)
-        #     seq_metadata = ray.get(done)
-
-        # print(pformat(seq_metadata))
-
-
-
-        # break
+        if len(pending_tasks) >= max_concurrent:
+            done, pending_tasks = ray.wait(pending_tasks, num_returns=1)
+            ray.get(done)
