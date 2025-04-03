@@ -7,7 +7,7 @@ from omegaconf import MISSING
 
 from crosscoders.dataclasses.language_model import LanguageModelConfig
 from crosscoders.dataclasses.dataset import DatasetConfig
-from crosscoders.dataclasses.runner import BatchConfig, ActivationsConfig, RunnerConfig
+from crosscoders.dataclasses.runner.base import BatchConfig, ActivationsConfig, RunnerConfig
 
 
 __all__ = ['Paths', 'Config']

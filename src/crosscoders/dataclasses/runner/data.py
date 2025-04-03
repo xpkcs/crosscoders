@@ -8,12 +8,10 @@ torch b/c of BaselineModuleConfig.
 from dataclasses import dataclass, field
 
 
-
-from crosscoders.dataclasses.autoencoders.baseline import BaselineModuleConfig
-from crosscoders.dataclasses.runner import OptimizerConfig, RunnerConfig
+from crosscoders.dataclasses.runner import RunnerConfig
 
 
-# __all__ = ['DataRunnerConfig', 'RayDataRunnerConfig', 'SparkDataRunnerConfig']
+__all__ = ['DataRunnerConfig', 'RayDataRunnerConfig', 'SparkDataRunnerConfig']
 
 
 
@@ -59,39 +57,4 @@ class SparkDataRunnerConfig(DataRunnerConfig):
 
 #     # def __post_init__(self):
 #     #     self.dataset.slice = 'train'
-
-
-@dataclass
-class TrainRunnerConfig(RunnerConfig):
-
-    stage: str = 'train'
-
-    # batch_size : int = 25000
-
-    # dataset: ActivationsDatasetConfig = field(default_factory=ActivationsDatasetConfig)
-
-
-    optimizer : OptimizerConfig      = field(default_factory=OptimizerConfig)
-    crosscoder: BaselineModuleConfig = field(default_factory=BaselineModuleConfig)
-
-
-    # @classmethod
-    # def from_config(cls, cfg: Optional[RunnerConfig] = None, **kwargs: dict) -> None:
-
-    #     cfg = super().from_config(cfg, kwargs)
-
-    #     for k in ('dataset', 'optimizer')
-    #     if 'dataset' in cfg:
-    #         cfg['dataset'] = TokensDatasetConfig(**cfg['dataset'])
-    #     if 'language_model' in cfg:
-    #         cfg['language_model'] = LanguageModelConfig(**cfg['language_model'])
-
-
-
-@dataclass
-class EvalRunnerConfig(DataRunnerConfig, TrainRunnerConfig):
-
-    stage: str = 'eval'
-
-    # batch_size : int = 25000
 
