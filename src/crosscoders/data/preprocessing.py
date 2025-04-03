@@ -23,46 +23,48 @@ CONFIG: Config = get_config()
 
 
 
-class SequenceMetadataBatch:
+# class SequenceMetadataBatch:
 
-    def __init__(self):
-        torch.set_grad_enabled(False)
+#     def __init__(self):
+#         torch.set_grad_enabled(False)
 
-        # device = torch.get_default_device()
-        # torch.set_default_device('cpu')
-        # self.model = HookedTransformer.from_pretrained(CONFIG.language_model.name, device=CONFIG.globals.device).eval()
-        self.model = HookedTransformer.from_pretrained(CONFIG.language_model.name).eval()
-        # torch.set_default_device(device)
-
-
-        self.bos_token = self.model.to_single_token(self.model.tokenizer.bos_token)
-
-        self.batch_out: Dict[str, np.ndarray] = {}
-        self.batch_offset_seq = 0
+#         # device = torch.get_default_device()
+#         # torch.set_default_device('cpu')
+#         # self.model = HookedTransformer.from_pretrained(CONFIG.language_model.name, device=CONFIG.globals.device).eval()
+#         self.model = HookedTransformer.from_pretrained(CONFIG.language_model.name, device='cpu', move_to_device=False).eval()
+#         # torch.set_default_device(device)
+#         self.model.to(CONFIG.globals.device)
 
 
-    def __call__(self, batch: Dict[str, np.ndarray]) -> Dict[str, np.ndarray]:
+#         self.bos_token = self.model.to_single_token(self.model.tokenizer.bos_token)
 
-        tokens = self.model.to_tokens(batch['text'])
-
-        batch_size = tokens.shape[0]
-        max_seq_len = min(tokens.shape[1], CONFIG.batch.max_seq_len)
-
-        tokens = tokens[:,:max_seq_len]
+#         self.batch_out: Dict[str, np.ndarray] = {}
+#         self.batch_offset_seq = 0
 
 
-        mask = tokens != self.bos_token
-        mask[:, 0] = True
+#     def __call__(self, batch: Dict[str, np.ndarray]) -> Dict[str, np.ndarray]:
 
-        self.batch_offset_seq += batch_size
+#         tokens = self.model.to_tokens(batch['text'])
 
+#         batch_size = tokens.shape[0]
+#         max_seq_len = min(tokens.shape[1], CONFIG.batch.max_seq_len)
 
-        return {
-            'seq_id': np.arange(batch_size, dtype=np.int64) + self.batch_offset_seq - batch_size,
-            'seq_len': mask.sum(1).to(torch.int16).cpu().numpy()
-        }
+#         tokens = tokens[:,:max_seq_len]
 
 
+#         mask = tokens != self.bos_token
+#         mask[:, 0] = True
+
+#         self.batch_offset_seq += batch_size
+
+
+#         return {
+#             'seq_id': np.arange(batch_size, dtype=np.int64) + self.batch_offset_seq - batch_size,
+#             'seq_len': mask.sum(1).to(torch.int16).cpu().numpy()
+#         }
+
+
+# @ray.remote(n_cpus=4, n_gpus=1, resources={'gpu_node': 1})
 class TokenToActivations:
 
     def __init__(self,
@@ -73,10 +75,10 @@ class TokenToActivations:
     ):
         torch.set_grad_enabled(False)
 
-        device = torch.get_default_device()
-        torch.set_default_device('cpu')
+        # device = torch.get_default_device()
+        # torch.set_default_device('cpu')
         self.model = HookedTransformer.from_pretrained(CONFIG.language_model.name, device=CONFIG.globals.device).eval()
-        torch.set_default_device(device)
+        # torch.set_default_device(device)
         self.hooks = [
             (
                 get_act_name(at, l) if '.' not in at else
