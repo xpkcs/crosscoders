@@ -1,23 +1,39 @@
 
 
-from dotenv import load_dotenv;     load_dotenv()
+# env vars
+from dotenv import load_dotenv;                                                 load_dotenv()
+from crosscoders.utils import check_required_env_vars;                          check_required_env_vars()
 
 
-import torch
-torch.set_default_dtype(torch.float32)
-torch.set_default_device('cuda' if torch.cuda.is_available() else 'cpu')
+# set config store
+from crosscoders.config_store import register_resolvers, init_config_store
 
-from crosscoders.config import print_config, get_config, set_config
-from crosscoders.utils import check_required_env_vars;  check_required_env_vars()
-from crosscoders import abc, autoencoders, dataclasses
+register_resolvers()
+init_config_store()
 
 
+# set global config
+from crosscoders.config import load_omegaconf, print_config, get_config, set_config
 
+set_config(load_omegaconf())
 # print_config(get_config(), resolve=True)
 
 
 
+
+from crosscoders import abc, autoencoders, dataclasses
+
+
+# misc
+
+
+
+# ------------------------- #
+
+
+
+
 __all__ = [
-    'print_config', 'get_config', 'set_config',
+    'load_omegaconf', 'print_config', 'get_config', 'set_config',
     'abc', 'autoencoders', 'dataclasses',
 ]
