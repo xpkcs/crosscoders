@@ -8,7 +8,7 @@ torch b/c of BaselineModuleConfig.
 from dataclasses import dataclass, field
 
 
-from crosscoders.dataclasses.runner import RunnerConfig
+from crosscoders.dataclasses.runner.base import RunnerConfig
 
 
 __all__ = ['DataRunnerConfig', 'RayDataRunnerConfig', 'SparkDataRunnerConfig']

@@ -3,9 +3,10 @@
 from pprint import pformat, pprint
 from crosscoders.data.dataset import Dataset
 from crosscoders.config import *
-from crosscoders.data.preprocessing import SequenceMetadataBatch
-from crosscoders.runners import Runner
-from crosscoders.utils import instantiate
+# from crosscoders.data.preprocessing import SequenceMetadataBatch
+# from crosscoders.runners import Runner
+# from crosscoders.dataclasses.config import Config
+# from crosscoders.utils import instantiate
 from crosscoders.io import ZarrIO
 
 CONFIG: Config = get_config()
@@ -14,9 +15,9 @@ CONFIG: Config = get_config()
 
 
 
-zarr_dir = f'{CONFIG.paths._Paths__s3_prefix}/{CONFIG.paths.activations_dir}'
+# zarr_dir = f'{CONFIG.paths._Paths__s3_prefix}/{CONFIG.paths.activations_dir}'
 # zarr_dir = '/home/ec2-user/crosscoders/zarr_dir'
-batch_size = 5
+batch_size = 10
 
 
 
@@ -26,7 +27,12 @@ import numpy as np
 from collections import defaultdict
 
 
-@ray.remote(num_cpus=1, memory=120 / 16 * 1024 * 1024 * 1024)
+
+
+
+
+
+@ray.remote(num_cpus=2, memory=7 * 1024 * 1024 * 1024)
 class PartitionWriter:
 
     def __init__(self, zarr_dir, layer, activation_type, d_model):
@@ -69,7 +75,7 @@ class PartitionWriter:
         return meta_updates
 
 
-@ray.remote(num_cpus=1, memory=1 * 1024 * 1024 * 1024)
+@ray.remote(num_cpus=1, memory=4 * 1024 * 1024 * 1024)
 class MetaWriter:
 
     def __init__(self, zarr_dir):
@@ -89,8 +95,8 @@ class MetaWriter:
         self.offset += n_new
 
 
-root, zarrays = ZarrIO.init(CONFIG.paths.zarr_dir)
-print(CONFIG.paths.zarr_dir)
+root, zarrays = ZarrIO.init(f'{CONFIG.paths.prefix}/{CONFIG.paths.zarr_dir}')
+print(f'{CONFIG.paths.prefix}/{CONFIG.paths.zarr_dir}')
 print(pformat(zarrays))
 print(pformat(root.tree()))
 
@@ -102,7 +108,7 @@ partition_writers = {}
 for layer in CONFIG.activations.layers:
     for activation_type in CONFIG.activations.types:
         partition_writers[(layer, activation_type)] = PartitionWriter.remote(
-            zarr_dir, layer, activation_type, CONFIG.language_model.d_model
+            f'{CONFIG.paths.prefix}/{CONFIG.paths.zarr_dir}', layer, activation_type, CONFIG.language_model.d_model
         )
 # partition_writers = PartitionWriter.remote(zarr_dir, CONFIG.language_model.d_model)
 # partition_writers = {}
@@ -115,10 +121,10 @@ for layer in CONFIG.activations.layers:
     # )
 
 # Create the meta writer actor.
-meta_writer = MetaWriter.remote(zarr_dir)
+meta_writer = MetaWriter.remote(f'{CONFIG.paths.prefix}/{CONFIG.paths.zarr_dir}')
 
 
-@ray.remote(num_cpus=1, memory=1 * 1024 * 1024 * 1024)
+@ray.remote(num_cpus=1, memory=4 * 1024 * 1024 * 1024)
 def __call__(batch):
 
 
@@ -160,12 +166,12 @@ def __call__(batch):
     ])
 
     # # seq_metadata = ray.get(done[0])
-    print(pformat(seq_metadata))
+    # print(pformat(seq_metadata))
 
     # # ready += [meta_writer.append_batch.remote(seq_metadata)]
     ray.get(meta_writer.append_batch.remote(seq_metadata[0]))
 
-    print('done with batch')
+    # print('done with batch')
 
 
 
@@ -175,19 +181,35 @@ def main(cfg):
 
     ds = Dataset(CONFIG.dataset)
 
-    ray_ds = ds.load('tokens')
+
+    # 1. Create a placement group for GPU resources
+    pg = ray.util.placement_group(
+        bundles=[{'GPU': 1, 'CPU': 8, 'memory': 20 * 1024 * 1024 * 1024}],
+        strategy='STRICT_PACK'  # Ensures GPU and CPU are on same node
+    )
+
+    # 2. Wait for placement group to be ready
+    ray.get(pg.ready())
+    print('Placement group is ready')
+
+    # Add a small delay to ensure scheduler registration
+    import time;        time.sleep(5)
+
+
+
+    from ray.util.scheduling_strategies import PlacementGroupSchedulingStrategy
+    ray_ds = ds.load('tokens', PlacementGroupSchedulingStrategy(placement_group=pg, placement_group_bundle_index=0))
     # ray_ds = ray_ds.map_batches(SequenceMetadataBatch, concurrency=1)
     # ds.save(ray_ds)
 
 
-
-
     # Control the number of concurrent batch processing tasks
-    max_concurrent = 1  # With 1 CPUs per task
+    max_concurrent = 8  # With 1 CPUs per task
+    wait_for_tasks = 1
 
     pending_tasks = []
     completed_tasks = 0
-    total_batches = 0
+    total_tasks = 0
 
 
     for batch_idx, batch in enumerate(ray_ds.iter_batches(batch_size=batch_size, batch_format='default')):
@@ -196,5 +218,18 @@ def main(cfg):
 
 
         if len(pending_tasks) >= max_concurrent:
-            done, pending_tasks = ray.wait(pending_tasks, num_returns=1)
+            done, pending_tasks = ray.wait(pending_tasks, num_returns=wait_for_tasks)
             ray.get(done)
+
+            completed_tasks += wait_for_tasks
+
+
+            print(f'finished {completed_tasks} # of tasks')
+
+
+    if pending_tasks:
+        done = ray.get(pending_tasks)
+
+        completed_tasks += len(done)
+
+        print(f'finished {completed_tasks} # of tasks')

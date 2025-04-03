@@ -90,14 +90,14 @@ class PredictionTrainingObjective(TrainingObjectiveConfig):
     output_name: str = 'mlp_out'
 
 
-# class JOB_TYPE_ENUM(Enum):
+class JOB_TYPE_ENUM(Enum):
 
-#     true: bool = True
-#     false: bool = False
+    true: bool = True
+    false: bool = False
 
-#     ray: str = 'ray'
-#     glue: str = 'glue'
-#     # emr: str = 'emr'
+    ray: str = 'ray'
+    glue: str = 'glue'
+    # emr: str = 'emr'
 
 
 @dataclass

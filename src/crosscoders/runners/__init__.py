@@ -2,7 +2,7 @@
 
 from abc import abstractmethod
 
-from crosscoders.dataclasses.runner import JOB_TYPE_ENUM
+from crosscoders.dataclasses.runner.base import JOB_TYPE_ENUM
 
 
 

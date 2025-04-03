@@ -86,7 +86,7 @@ class Dataset:
         self.cfg: DatasetConfig = cfg
 
 
-    def load(self, which: Literal['tokens', 'activations'] = 'tokens', shuffle_level='sequences') -> ray.data.Dataset:
+    def load(self, which: Literal['tokens', 'activations'] = 'tokens', scheduling_strategy=None) -> ray.data.Dataset:
 
         # ds = self.cfg.datasource
         ds = hydra.utils.call(self.cfg.datasource)
@@ -101,9 +101,14 @@ class Dataset:
                     batch_size=CONFIG.batch.batch_size,
                     concurrency=1,
                     num_gpus=1,
-                    num_cpus=1,
-                    memory=10*1024*1024*1024,
-                    zero_copy_batch=True
+                    num_cpus=4,
+                    # resources = {'gpu_node': 1},
+                    # memory=28*1024*1024*1024,
+                    zero_copy_batch=True,
+                    scheduling_strategy=scheduling_strategy,
+                    # runtime_env={
+                    #     'env_vars': {'CUDA_VISIBLE_DEVICES': ''}
+                    # }
                 )
 
                 # ds = ds.limit(CONFIG.batch.n_records * len(CONFIG.activations.types) * len(CONFIG.activations.layers))
