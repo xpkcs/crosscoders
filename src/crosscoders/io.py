@@ -33,7 +33,7 @@ class ZarrIO:
 
 
     @staticmethod
-    def init(zarr_dir):
+    def init(zarr_dir, chunk_sizes={'activations': 100000, 'sequences': 10000}):
 
         # store = zarr.storage.LocalStore(zarr_dir)
         # store = zarr.storage.FsspecStore(fsspec.filesystem('s3', asynchronous=True), path='crosscoders/data/tiny-stories-v1/language_model=tiny-stories-33M/slice=train/tag=tiny-stories-33M-1B/')
@@ -54,7 +54,7 @@ class ZarrIO:
                 zarrays['activations'][(layer, activation_type)] = activation_type_zgroup.create_array(
                     f'raw',
                     shape=(0, CONFIG.language_model.d_model),
-                    chunks=(10000, CONFIG.language_model.d_model),
+                    chunks=(chunk_sizes['activations'], CONFIG.language_model.d_model),
                     dtype=np.float32,
                 )
 
@@ -62,7 +62,7 @@ class ZarrIO:
             f'meta/sequences',
             shape=(0, 2),  # (start_idx, length)
             dtype=np.int32,
-            chunks=(1000, 2)
+            chunks=(chunk_sizes['sequences'], 2)
         )
 
 
