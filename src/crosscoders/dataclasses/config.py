@@ -4,11 +4,10 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from omegaconf import MISSING
-import torch
 
 from crosscoders.dataclasses.language_model import LanguageModelConfig
-from crosscoders.dataclasses.runner import BatchConfig, DatasetConfig, RunnerConfig
-from crosscoders.dataclasses.runner import ActivationsConfig, DatasetConfig, RunnerConfig
+from crosscoders.dataclasses.dataset import DatasetConfig
+from crosscoders.dataclasses.runner import BatchConfig, ActivationsConfig, RunnerConfig
 
 
 __all__ = ['Paths', 'Config']
@@ -27,7 +26,7 @@ class Paths:
     # local_prefix: str = '${hydra:runtime.cwd}'
     __local_prefix : str = Path(__file__).parents[2]
     __s3_prefix    : str = 's3://${..globals.s3_bucket}'
-    __prefix       : str = '${ifelse:${..globals.local}, ${._Paths__local_prefix}, ${._Paths__s3_prefix}}'
+    prefix         : str = '${ifelse:${..globals.local}, ${._Paths__local_prefix}, ${._Paths__s3_prefix}}'
 
     # config_path: str = MISSING
     # data_dir       : str = '${._Paths__prefix}/data'
@@ -64,15 +63,25 @@ class Config:
 
     paths: Paths = field(default_factory=Paths)
 
-    batch: BatchConfig = field(default_factory=BatchConfig)
+    # batch: BatchConfig = field(default_factory=BatchConfig)
 
-    language_model: LanguageModelConfig = field(default_factory=LanguageModelConfig)
+    # language_model: LanguageModelConfig = field(default_factory=LanguageModelConfig)
 
-    activations: ActivationsConfig = field(default_factory=ActivationsConfig)
+    # activations: ActivationsConfig = field(default_factory=ActivationsConfig)
 
-    dataset: DatasetConfig = field(default_factory=DatasetConfig)
+    # dataset: DatasetConfig = field(default_factory=DatasetConfig)
 
-    runner: RunnerConfig = field(default_factory=RunnerConfig)
+    # runner: RunnerConfig = field(default_factory=RunnerConfig)
+
+    batch: BatchConfig = MISSING
+
+    language_model: LanguageModelConfig = MISSING
+
+    activations: ActivationsConfig = MISSING
+
+    dataset: DatasetConfig = MISSING
+
+    runner: RunnerConfig = MISSING
 
 
 

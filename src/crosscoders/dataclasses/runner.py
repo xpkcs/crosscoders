@@ -4,11 +4,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Optional, Tuple
 from omegaconf import MISSING, DictConfig, OmegaConf
-import numpy as np
 
-
-from crosscoders.dataclasses.autoencoders.baseline import BaselineModuleConfig
-from crosscoders.dataclasses.dataset import DatasetConfig
 
 
 __all__ = ['RunnerConfig']
@@ -86,14 +82,14 @@ class PredictionTrainingObjective(TrainingObjectiveConfig):
     output_name: str = 'mlp_out'
 
 
-class JOB_TYPE_ENUM(Enum):
+# class JOB_TYPE_ENUM(Enum):
 
-    true: bool = True
-    false: bool = False
+#     true: bool = True
+#     false: bool = False
 
-    ray: str = 'ray'
-    glue: str = 'glue'
-    # emr: str = 'emr'
+#     ray: str = 'ray'
+#     glue: str = 'glue'
+#     # emr: str = 'emr'
 
 
 @dataclass
@@ -129,7 +125,8 @@ class RunnerConfig:
 
     training_objective: TrainingObjectiveConfig = field(default_factory=TrainingObjectiveConfig)
 
-    job: JOB_TYPE_ENUM = JOB_TYPE_ENUM.false
+    # job: JOB_TYPE_ENUM = JOB_TYPE_ENUM.false
+    job: str = 'false'
     # ray_job: bool = '${globals.ray_job}'
     # glue_job: bool = '${globals.glue_job}'
 
@@ -162,80 +159,3 @@ class RunnerConfig:
 
     #     # if issubclass(type(self.dataset), DatasetConfig):
     #     self.dataset.slice = self.stage
-
-
-@dataclass
-class DataRunnerConfig(RunnerConfig):
-
-    stage: str = 'data'
-
-
-@dataclass
-class RayDataRunnerConfig(DataRunnerConfig):
-    ...
-
-@dataclass
-class SparkDataRunnerConfig(DataRunnerConfig):
-    ...
-
-
-# @dataclass
-# class TokensToActivationsDataRunnerConfig(DataRunnerConfig):
-#     ...
-
-#     # _target_: str = 'crosscoders.data.runner.TokensToActivationsDataRunner'
-
-#     # dataset: TinyStoriesTokensToActivationsDatasetConfig = field(default_factory=TinyStoriesTokensToActivationsDatasetConfig)
-
-
-#     # @classmethod
-#     # def from_config(cls, cfg: Optional[RunnerConfig] = None, **kwargs: dict) -> None:
-
-#     #     cfg = super().from_config(cfg, kwargs)
-
-#     #     if 'dataset' in cfg:    # todo: no hardcode
-#     #         cfg['dataset'] = TinyStoriesTokensToActivationsDatasetConfig(**cfg['dataset'])
-#     #     if 'language_model' in cfg:
-#     #         cfg['language_model'] = LanguageModelConfig(**cfg['language_model'])
-
-
-#     #     return cls(**cfg, **kwargs)
-
-#     # def __post_init__(self):
-#     #     self.dataset.slice = 'train'
-
-
-@dataclass
-class TrainRunnerConfig(RunnerConfig):
-
-    stage: str = 'train'
-
-    # batch_size : int = 25000
-
-    # dataset: ActivationsDatasetConfig = field(default_factory=ActivationsDatasetConfig)
-
-
-    optimizer : OptimizerConfig      = field(default_factory=OptimizerConfig)
-    crosscoder: BaselineModuleConfig = field(default_factory=BaselineModuleConfig)
-
-
-    # @classmethod
-    # def from_config(cls, cfg: Optional[RunnerConfig] = None, **kwargs: dict) -> None:
-
-    #     cfg = super().from_config(cfg, kwargs)
-
-    #     for k in ('dataset', 'optimizer')
-    #     if 'dataset' in cfg:
-    #         cfg['dataset'] = TokensDatasetConfig(**cfg['dataset'])
-    #     if 'language_model' in cfg:
-    #         cfg['language_model'] = LanguageModelConfig(**cfg['language_model'])
-
-
-
-@dataclass
-class EvalRunnerConfig(DataRunnerConfig, TrainRunnerConfig):
-
-    stage: str = 'eval'
-
-    # batch_size : int = 25000
-
