@@ -4,6 +4,10 @@
 
 import numpy as np
 
+from crosscoders.dataclasses.dataset import DatasetConfig
+from crosscoders.dataclasses.language_model import LanguageModelConfig
+from crosscoders.dataclasses.runner.base import ActivationsConfig
+
 def register_resolvers(replace=True):
 
     def eq(x, y):
@@ -59,7 +63,13 @@ def init_config_store():
     cs = ConfigStore.instance()
 
     # cs.store(name='args', node=ArgsConfig)
-    cs.store(name='base_config', node=Config)
+    cs.store(name='base_config', node=Config(
+        batch = BatchConfig,
+        language_model = LanguageModelConfig,
+        activations = ActivationsConfig,
+        dataset = DatasetConfig,
+        runner = RunnerConfig
+    ))
     # cs.store(name='base_runner', node=RunnerConfig)
 
     cs.store(group='runner', name='data', node=DataRunnerConfig)
