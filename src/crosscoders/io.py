@@ -1,9 +1,9 @@
 
 
 import os
-import fsspec
+# import fsspec
 import numpy as np
-import s3fs
+# import s3fs
 import zarr
 
 from crosscoders.config import *
