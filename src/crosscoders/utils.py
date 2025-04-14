@@ -273,24 +273,20 @@ def convert_activation_dict(data):
 
 import boto3
 def delete_files_in_s3(bucket_name, prefix, dry_run=False):
+
     s3 = boto3.client('s3')
 
     response = s3.list_objects_v2(Bucket=bucket_name, Prefix=prefix, Delimiter='/')
 
-    if 'Contents' in response:
+    try:
+        assert 'Contents' in response
         files = [{'Key': obj['Key']} for obj in response['Contents'] if obj['Key'].endswith('.parquet')]
+        assert files
+
         print(f'deleting {len(files)} files')
-        # print(files)
+
         if not dry_run:
             s3.delete_objects(Bucket=bucket_name, Delete={'Objects': files, 'Quiet': False})
 
-        # for obj in response['Contents']:
-        #     if obj['Key'].endswith('.parquet'):
-        #         print(f"Deleting: {obj['Key']}")
-        #         if not dry_run:
-        #             s3.delete_object(Bucket=bucket_name, Key=obj['Key'])
-    else:
+    except:
         print("No Parquet files found in the specified path.")
-
-# _ = delete_files_in_s3('crosscoders', 'data/tiny-stories-v1/language_model=tiny-stories-33M/slice=train/tag=tiny-stories-33M-1B/activations/')
-# _
