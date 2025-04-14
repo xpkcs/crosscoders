@@ -24,11 +24,11 @@ COPY --chown=ray:root src ./src
 
 
 # --- Install Dependencies ---
-RUN conda run -n base python -m pip install -r ./requirements/core.txt
-RUN conda run -n base python -m pip install -r ./requirements/data.txt
+RUN conda run -n base python -m pip install -r ./requirements/core.txt --no-cache-dir
+RUN conda run -n base python -m pip install -r ./requirements/data.txt --no-cache-dir
 
 RUN if [[ "${ACCELERATOR}" == "gpu" ]]; then \
-        conda run -n base python -m pip install -r ./requirements/torch.txt; \
+        conda run -n base python -m pip install -r ./requirements/torch.txt --no-cache-dir; \
     fi
 
 RUN conda run -n base python -m pip install .
@@ -46,3 +46,11 @@ ENV PYTHONUNBUFFERED 1
 ENV CONFIG_PATH ./src/configs
 
 EXPOSE 6379 8265 8080 3000
+
+
+RUN wget https://dl.grafana.com/enterprise/release/grafana-enterprise-11.6.0.linux-amd64.tar.gz -O /tmp/grafana-enterprise-11.6.0.linux-amd64.tar.gz && \
+    sudo tar -zxvf /tmp/grafana-enterprise-11.6.0.linux-amd64.tar.gz -C /usr/local/etc && \
+    sudo rm -rf /tmp/grafana-enterprise-11.6.0.linux-amd64.tar.gz && \
+    sudo chown -R ray:root /usr/local/etc/grafana-v11.6.0 && \
+    sudo find /usr/local/etc/grafana-v11.6.0/bin/ -type f -exec ln -sf {} /usr/local/bin/ \;
+
