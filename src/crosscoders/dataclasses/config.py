@@ -29,9 +29,8 @@ class Paths:
     prefix         : str = '${ifelse:${..globals.local}, ${._Paths__local_prefix}, ${._Paths__s3_prefix}}'
 
     # config_path: str = MISSING
-    # data_dir       : str = '${._Paths__prefix}/data'
-    data_dir       : str = 'data'
-    dataset_dir    : str = '${.data_dir}/${..dataset.name}/language_model=${..language_model.name}/slice=${..dataset.slice}/tag=${..dataset.tag}'
+    data_dir       : str = '${.prefix}/data'
+    dataset_dir    : str = '${.data_dir}/${..dataset.name}/language_model=${..language_model.name}/slice=${..dataset.slice}'
     activations_dir: str = '${.dataset_dir}/activations/'
     zarr_dir       : str = '${.dataset_dir}/zarr/'
 

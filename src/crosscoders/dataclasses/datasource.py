@@ -31,5 +31,5 @@ class S3DatasourceConfig(DatasourceConfig):
     _target_: str = 'crosscoders.data.dataset.S3Datasource._load'
 
     bucket_name: str = '${globals.s3_bucket}'
-    key_prefix: str = '${paths.activations_dir}'
+    key_prefix: str = '/'.join('${paths.activations_dir}'.split('/')[3:])
 
