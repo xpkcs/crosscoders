@@ -23,60 +23,17 @@ CONFIG: Config = get_config()
 
 
 
-class SequenceMetadataBatch:
+class TokenToActivations:
 
     def __init__(self):
+
         torch.set_grad_enabled(False)
 
         # device = torch.get_default_device()
         # torch.set_default_device('cpu')
-        # self.model = HookedTransformer.from_pretrained(CONFIG.language_model.name, device=CONFIG.globals.device).eval()
-        self.model = HookedTransformer.from_pretrained(CONFIG.language_model.name).eval()
+        self.model = HookedTransformer.from_pretrained(CONFIG.language_model.name, device=CONFIG.globals.device).eval()
         # torch.set_default_device(device)
 
-
-        self.bos_token = self.model.to_single_token(self.model.tokenizer.bos_token)
-
-        self.batch_out: Dict[str, np.ndarray] = {}
-        self.batch_offset_seq = 0
-
-
-    def __call__(self, batch: Dict[str, np.ndarray]) -> Dict[str, np.ndarray]:
-
-        tokens = self.model.to_tokens(batch['text'])
-
-        batch_size = tokens.shape[0]
-        max_seq_len = min(tokens.shape[1], CONFIG.batch.max_seq_len)
-
-        tokens = tokens[:,:max_seq_len]
-
-
-        mask = tokens != self.bos_token
-        mask[:, 0] = True
-
-        self.batch_offset_seq += batch_size
-
-
-        return {
-            'seq_id': np.arange(batch_size, dtype=np.int64) + self.batch_offset_seq - batch_size,
-            'seq_len': mask.sum(1).to(torch.int16).cpu().numpy()
-        }
-
-
-class TokenToActivations:
-
-    def __init__(self,
-        # layers: Iterable[int],
-        # model_names: Iterable[str] = ('gpt2-small', 'gpt-neo-125M'),
-        # model_names: Iterable[str] = ('tiny-stories-33M',),
-        # latent_names: Iterable[str] = ('resid_mid', 'ln2.normalized', 'mlp_out', 'resid_post')
-    ):
-        torch.set_grad_enabled(False)
-
-        device = torch.get_default_device()
-        torch.set_default_device('cpu')
-        self.model = HookedTransformer.from_pretrained(CONFIG.language_model.name, device=CONFIG.globals.device).eval()
-        torch.set_default_device(device)
         self.hooks = [
             (
                 get_act_name(at, l) if '.' not in at else
@@ -86,8 +43,6 @@ class TokenToActivations:
             for l in range(self.model.cfg.n_layers)
             for at in CONFIG.activations.types
         ]
-
-
 
         self.bos_token = self.model.to_single_token(self.model.tokenizer.bos_token)
 
@@ -119,8 +74,6 @@ class TokenToActivations:
         mask[:, 0] = True
 
 
-
-
         # mask = (tokens != self.bos_token)
         # mask[:, 0] = True
         # last_idx = mask.sum(1)
@@ -129,8 +82,6 @@ class TokenToActivations:
 
         self.batch_out = {
             'tokens': tokens,
-            # 'seq_id': torch.arange(self.batch_size, device=tokens.device, dtype=torch.int64).unsqueeze(1).expand(self.batch_size, self.max_seq_len),
-            # 'pos_id': torch.arange(self.max_seq_len, device=tokens.device, dtype=torch.int16).unsqueeze(0).expand(self.batch_size, self.max_seq_len),
         }
 
         # compose tensors for desired latent_names, add to latents dict
@@ -144,64 +95,24 @@ class TokenToActivations:
                 fwd_hooks=self.hooks
             )
 
+        # # if records as seqs
         # batch_out = {}
         # for k in self.batch_out:
         #     _ = self.batch_out[k].detach()
         #     batch_out[k] = [_[i , :idx.item() + 1].cpu().numpy() for i, idx in enumerate(last_idx)]
         # self.batch_out = {}
 
-
         mask = tokens != self.bos_token
         mask[:, 0] = True
 
         batch_out = {}
         for k, v in self.batch_out.items():
-            # batch_out[k] = v[mask].cpu().numpy()
+            # batch_out[k] = v[mask].cpu().numpy()  # if records as seqs
             batch_out[k] = v.cpu().numpy()
         self.batch_out = {}
 
 
-
-
         return batch_out
-
-
-    # def __call__(self, batch: Dict[str, np.ndarray]) -> Dict[str, np.ndarray]:
-
-    #     tokens = self.model.to_tokens(batch['text'])
-
-    #     self.batch_size = tokens.shape[0]
-    #     self.max_seq_len = min(tokens.shape[1], CONFIG.batch.max_seq_len)
-
-    #     tokens = tokens[:,:self.max_seq_len]
-    #     self.buffers['tokens'][:self.batch_size,:self.max_seq_len] = tokens
-
-
-    #     mask = (tokens != self.bos_token)
-    #     mask[:, 0] = True
-    #     last_idx = mask.sum(1)
-
-    #     # assert (last_idx != 0).all(), 'found empty sequence in last_idx'
-
-
-    #     # compose tensors for desired latent_names, add to latents dict
-    #     for _ in ['tokens'] + CONFIG.activations.types:
-    #         self.batch_out[_] = self.buffers[_][:self.batch_size,:self.max_seq_len]
-
-    #     with torch.inference_mode():
-    #         _ = self.model.run_with_hooks(
-    #             tokens,
-    #             fwd_hooks=self.hooks
-    #         )
-
-    #     batch_out = {}
-    #     for k in self.batch_out:
-    #         _ = self.batch_out[k].detach()
-    #         batch_out[k] = [_[i , :idx.item() + 1].cpu().numpy() for i, idx in enumerate(last_idx)]
-    #     self.batch_out = {}
-
-
-    #     return batch_out
 
 
     def store_activation_hook(self, activation, hook, activation_type, layer_idx):

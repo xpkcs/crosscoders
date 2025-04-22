@@ -64,7 +64,6 @@ class S3Datasource(Datasource):
 class HuggingFaceDatasource(Datasource):
 
     @abstractmethod
-    # def _load(org, repo, slice, **kwargs):
     def _load(**kwargs):
 
         device = torch.get_default_device()
@@ -86,7 +85,7 @@ class Dataset:
         self.cfg: DatasetConfig = cfg
 
 
-    def load(self, which: Literal['tokens', 'activations'] = 'tokens', shuffle_level='sequences') -> ray.data.Dataset:
+    def load(self, which: Literal['tokens', 'activations'] = 'tokens') -> ray.data.Dataset:
 
         # ds = self.cfg.datasource
         ds = hydra.utils.call(self.cfg.datasource)
@@ -113,15 +112,12 @@ class Dataset:
                 pass
 
 
-
-
         return ds
 
 
     def save(self, ds: ray.data.Dataset) -> None:
 
         print(f'saving activations @ {CONFIG.paths._Paths__prefix}/{CONFIG.paths.activations_dir}', flush=True)
-        # print(f'saving activations @ /home/ec2-user/crosscoders/{CONFIG.paths.activations_dir}', flush=True)
 
         ds.write_parquet(
             f'{CONFIG.paths._Paths__prefix}/{CONFIG.paths.activations_dir}',
@@ -131,16 +127,3 @@ class Dataset:
                 'num_cpus': 1
             },
         )
-
-
-        # ds.write_parquet(
-        #     f'{CONFIG.paths._Paths__prefix}/{CONFIG.paths.activations_dir}',
-        #     compression='zstd',
-        #     # min_rows_per_file=8192,
-        #     min_rows_per_file=256,   # seqs
-        #     concurrency=3,
-        #     ray_remote_args={
-        #         'num_cpus': 2,
-        #         'memory': 4 * 1024 * 1024 * 1024
-        #     },
-        # )
