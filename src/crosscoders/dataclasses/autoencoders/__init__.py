@@ -63,8 +63,8 @@ class ParameterInitializationFunctionConfig:
 @dataclass
 class AutoencoderInitConfig:
 
-    n_layers: int = '${runner.language_model.n_layers}'
-    d_model: int = '${runner.language_model.d_model}'
+    n_layers: int = '${language_model.n_layers}'
+    d_model: int = '${language_model.d_model}'
     d_coder: int = 24576
 
     param_init: ParameterInitializationFunctionConfig = MISSING

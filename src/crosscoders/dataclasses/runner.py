@@ -28,7 +28,8 @@ __all__ = ['RunnerConfig']
 class ActivationsConfig:
 
     layers: Optional[list[int]] = '${range:${language_model.n_layers}}'
-    types: list[str] = field(default_factory=lambda: ['resid_mid', 'ln2.normalized', 'mlp_out', 'resid_post'])
+    # types: list[str] = field(default_factory=lambda: ['resid_mid', 'ln2.normalized', 'mlp_out', 'resid_post'])
+    types: list[str] = field(default_factory=lambda: ['ln2.normalized', 'mlp_out'])
 
 
 @dataclass
@@ -113,13 +114,49 @@ class BatchConfig:
 
 
 
+@dataclass
+class BackendConfig:
+
+    type: str = MISSING
+
+@dataclass
+class RayBackendConfig(BackendConfig):
+
+    type: str = 'ray'
+
+@dataclass
+class SparkBackendConfig(BackendConfig):
+
+    type: str = 'spark'
+
+
+@dataclass
+class DataStrategyConfig:
+
+    type: str = MISSING
+    activations_path: str = '${paths._Paths__prefix}/${paths.activations_dir}'
+
+    def __post_init__(self):
+        self.type = self.type.lower()
+
+@dataclass
+class TokensToActivationsStrategyConfig(DataStrategyConfig):
+
+    type: str = 'TokensToActivations'
+
+# @dataclass
+# class ShuffleStrategyConfig:
+
+#     type: str = 'Shuffle'
+
+
 
 @dataclass
 class RunnerConfig:
 
     stage: str = MISSING
 
-    _target_: str = MISSING
+    # _target_: str = MISSING
 
     # batch_size    : int = MISSING
     # n_tokens    : int = 1000000000
@@ -129,7 +166,7 @@ class RunnerConfig:
 
     training_objective: TrainingObjectiveConfig = field(default_factory=TrainingObjectiveConfig)
 
-    job: JOB_TYPE_ENUM = JOB_TYPE_ENUM.false
+    # job: JOB_TYPE_ENUM = JOB_TYPE_ENUM.false
     # ray_job: bool = '${globals.ray_job}'
     # glue_job: bool = '${globals.glue_job}'
 
@@ -140,6 +177,9 @@ class RunnerConfig:
     # dataset: DatasetConfig = '${dataset}'
 
     # language_model: LanguageModelConfig = field(default_factory=LanguageModelConfig)
+
+    backend: BackendConfig = field(default_factory=BackendConfig)
+
 
 
     @classmethod
@@ -168,15 +208,15 @@ class RunnerConfig:
 class DataRunnerConfig(RunnerConfig):
 
     stage: str = 'data'
+    data_strategy: DataStrategyConfig = field(default_factory=DataStrategyConfig)
 
+# @dataclass
+# class RayDataRunnerConfig(DataRunnerConfig):
+#     ...
 
-@dataclass
-class RayDataRunnerConfig(DataRunnerConfig):
-    ...
-
-@dataclass
-class SparkDataRunnerConfig(DataRunnerConfig):
-    ...
+# @dataclass
+# class SparkDataRunnerConfig(DataRunnerConfig):
+#     ...
 
 
 # @dataclass

@@ -83,9 +83,10 @@ class Dataset:
     def __init__(self, cfg: DatasetConfig):
 
         self.cfg: DatasetConfig = cfg
+        self._dataset = None
 
 
-    def load(self, which: Literal['tokens', 'activations'] = 'tokens') -> ray.data.Dataset:
+    def _load(self, which: Literal['tokens', 'activations'] = 'tokens') -> ray.data.Dataset:
 
         # ds = self.cfg.datasource
         ds = hydra.utils.call(self.cfg.datasource)
@@ -115,15 +116,23 @@ class Dataset:
         return ds
 
 
-    def save(self, ds: ray.data.Dataset) -> None:
+    def __getattr__(self, name):
+        """Forward attribute access to the underlying Ray dataset."""
+        if self._dataset is None:
+            self._dataset = self._load()
 
-        print(f'saving activations @ {CONFIG.paths._Paths__prefix}/{CONFIG.paths.activations_dir}', flush=True)
+        return getattr(self._dataset, name)
 
-        ds.write_parquet(
-            f'{CONFIG.paths._Paths__prefix}/{CONFIG.paths.activations_dir}',
-            compression='zstd',
-            # min_rows_per_file=8192,
-            ray_remote_args={
-                'num_cpus': 1
-            },
-        )
+
+    # def save(self, ds: ray.data.Dataset) -> None:
+
+    #     print(f'saving activations @ {CONFIG.paths._Paths__prefix}/{CONFIG.paths.activations_dir}', flush=True)
+
+    #     ds.write_parquet(
+    #         f'{CONFIG.paths._Paths__prefix}/{CONFIG.paths.activations_dir}',
+    #         compression='zstd',
+    #         # min_rows_per_file=8192,
+    #         ray_remote_args={
+    #             'num_cpus': 1
+    #         },
+    #     )

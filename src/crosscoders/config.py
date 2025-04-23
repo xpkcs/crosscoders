@@ -44,7 +44,7 @@ OmegaConf.register_new_resolver('range', lambda n: list(range(int(n))), replace=
 
 # from crosscoders.dataclasses.args import ArgsConfig
 from crosscoders.dataclasses.config import Config
-from crosscoders.dataclasses.runner import BatchConfig, DataRunnerConfig, PredictionTrainingObjective, RayDataRunnerConfig, ReconstructionTrainingObjective, RunnerConfig, SparkDataRunnerConfig, TrainRunnerConfig, EvalRunnerConfig
+from crosscoders.dataclasses.runner import BatchConfig, DataRunnerConfig, PredictionTrainingObjective, RayBackendConfig, ReconstructionTrainingObjective, RunnerConfig, TokensToActivationsStrategyConfig, TrainRunnerConfig, EvalRunnerConfig
 from crosscoders.dataclasses.autoencoders.baseline import BaselineAutoencoderConfig
 from crosscoders.dataclasses.autoencoders.jumprelu import JumpReLUAutoencoderConfig
 
@@ -53,16 +53,18 @@ cs = ConfigStore.instance()
 
 cs.store(name='base_config', node=Config)
 cs.store(name='base_runner', node=RunnerConfig)
-cs.store(group='runner', name='data', node=DataRunnerConfig)
-cs.store(group='runner', name='train', node=TrainRunnerConfig)
-cs.store(group='runner', name='eval', node=EvalRunnerConfig)
+cs.store(group='runner', name='0.0-activations', node=DataRunnerConfig(backend=RayBackendConfig(), data_strategy=TokensToActivationsStrategyConfig()))
+cs.store(group='runner', name='1.0-train', node=TrainRunnerConfig(backend=RayBackendConfig()))
+# cs.store(group='runner', name='data', node=DataRunnerConfig)
+# cs.store(group='runner', name='train', node=TrainRunnerConfig)
+# cs.store(group='runner', name='eval', node=EvalRunnerConfig)
 cs.store(group='crosscoder', name='baseline', node=BaselineAutoencoderConfig)
 cs.store(group='crosscoder', name='jumprelu', node=JumpReLUAutoencoderConfig)
 # cs.store(name='args', node=ArgsConfig)
 
 
-cs.store(group='runner', name='RayDataRunner', node=RayDataRunnerConfig)
-cs.store(group='runner', name='SparkDataRunner', node=SparkDataRunnerConfig)
+# cs.store(group='runner', name='RayDataRunner', node=RayDataRunnerConfig)
+# cs.store(group='runner', name='SparkDataRunner', node=SparkDataRunnerConfig)
 cs.store(group='runner/training_objective', name='reconstruction', node=ReconstructionTrainingObjective)
 cs.store(group='runner/training_objective', name='prediction', node=PredictionTrainingObjective)
 
@@ -97,18 +99,18 @@ def load_omegaconf(config_name: str = os.environ['CONFIG_NAME'], config_path: st
     return cfg
 
 
-def print_config(cfg, resolve: bool = False, rich: bool = True) -> None:
+def print_config(cfg, resolve: bool = False, rich: bool = False) -> None:
 
-    cfg_dict = OmegaConf.to_container(cfg, resolve=True)
-    cfg_dict['paths']['_Paths__prefix'] = '[magenta]' + str(cfg.paths._Paths__prefix) + '[/]'
-    cfg_dict['paths']['activations_dir'] = '[magenta]' + str(cfg.paths.activations_dir) + '[/]'
-    cfg_dict['batch']['batch_size'] = '[sea_green1]' + str(cfg.batch.batch_size) + '[/]'
-    cfg_dict['batch']['n_tokens'] = '[sea_green1]' + str(cfg.batch.n_tokens) + '[/]'
-    cfg_dict['dataset']['datasource']['which'] = '[red]' + str(cfg.dataset.datasource.which) + '[/]'
-    cfg_dict['runner']['stage'] = '[red]' + str(cfg.runner.stage) + '[/]'
-    cfg_dict['runner']['_target_'] = (lambda i: ''.join([
-            str(cfg.runner._target_[:i]), '[red]', str(cfg.runner._target_[i:]), '[/]'
-        ]))(cfg.runner._target_.rfind(".") + 1)
+    cfg_dict = OmegaConf.to_container(cfg, resolve=resolve)
+    # cfg_dict['paths']['_Paths__prefix'] = '[magenta]' + str(cfg.paths._Paths__prefix) + '[/]'
+    # cfg_dict['paths']['activations_dir'] = '[magenta]' + str(cfg.paths.activations_dir) + '[/]'
+    # cfg_dict['batch']['batch_size'] = '[sea_green1]' + str(cfg.batch.batch_size) + '[/]'
+    # cfg_dict['batch']['n_tokens'] = '[sea_green1]' + str(cfg.batch.n_tokens) + '[/]'
+    # cfg_dict['dataset']['datasource']['which'] = '[red]' + str(cfg.dataset.datasource.which) + '[/]'
+    # cfg_dict['runner']['stage'] = '[red]' + str(cfg.runner.stage) + '[/]'
+    # cfg_dict['runner']['_target_'] = (lambda i: ''.join([
+    #         str(cfg.runner._target_[:i]), '[red]', str(cfg.runner._target_[i:]), '[/]'
+    #     ]))(cfg.runner._target_.rfind(".") + 1)
 
 
     # cfg_yaml = OmegaConf.to_yaml(cfg, resolve=True)
@@ -130,7 +132,8 @@ def print_config(cfg, resolve: bool = False, rich: bool = True) -> None:
     else:
         print()
         print(' '.join(['-' * 25, 'CONFIG', '-' * 25]))
-        print(OmegaConf.to_yaml(cfg, resolve=resolve), end='')
+        # print(OmegaConf.to_yaml(cfg, resolve=resolve), end='')
+        print(cfg_yaml, end='')
         print('-' * 61)
         print()
 

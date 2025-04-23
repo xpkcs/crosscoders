@@ -16,7 +16,7 @@ class DatasetConfig:
 
     # _target_: str = MISSING
     name: str = MISSING
-    tag: str = MISSING
+    tag: str = ''
 
     # batch_size: int = '${batch.batch_size}'
     # n_tokens: int = '${batch.n_tokens}'

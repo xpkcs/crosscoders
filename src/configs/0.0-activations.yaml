@@ -4,7 +4,7 @@ defaults:
   - dataset/datasource: hf
   - language_model: tiny-stories-33M
   - batch: sequence
-  - runner: RayDataRunner
+  - runner: 0.0-activations
   - runner/training_objective: prediction
   - _self_
 
@@ -41,10 +41,7 @@ batch:
   # n_tokens: 100000
 
 
-runner:
+# runner:
 
   # batch_size: 32  # laptop, 5.9GB VRAM for 0.0-activations
   # max_tokens: 1000
-
-
-  _target_: crosscoders.runners.data.ray.TokensToActivationsDataRunner
