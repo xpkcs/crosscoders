@@ -255,8 +255,8 @@ class TrainRunnerConfig(RunnerConfig):
     # dataset: ActivationsDatasetConfig = field(default_factory=ActivationsDatasetConfig)
 
 
-    optimizer : OptimizerConfig      = field(default_factory=OptimizerConfig)
-    crosscoder: BaselineModuleConfig = field(default_factory=BaselineModuleConfig)
+    optimizer  : OptimizerConfig      = field(default_factory=OptimizerConfig)
+    autoencoder: BaselineModuleConfig = field(default_factory=BaselineModuleConfig)
 
 
     # @classmethod

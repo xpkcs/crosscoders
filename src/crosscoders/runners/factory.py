@@ -4,9 +4,10 @@ import hydra
 from omegaconf import DictConfig, OmegaConf
 from omegaconf.errors import ConfigAttributeError
 
-from crosscoders.runners.ray import RayBackend, TokensToActivationsStrategy
-from crosscoders.runners.runner import DataProcessingRunner, TrainingRunner
-from crosscoders.runners.train import Trainer
+from crosscoders.runners.engine import RayBackend
+from crosscoders.runners.strategy import TokensToActivationsStrategy
+from crosscoders.runners.runner import DataProcessingRunner, TrainRunner
+from crosscoders.runners.trainer import Trainer
 
 
 
@@ -48,6 +49,15 @@ class DataStrategyFactory(MapFactory):
     }
 
 
+
+class AutoencoderFactory(MapFactory):
+
+    _map = {
+        'crosscoder': None,
+        'crosslayertranscoder': None,
+    }
+
+
 class RunnerFactory:
     """Factory for creating runners."""
 
@@ -66,13 +76,12 @@ class RunnerFactory:
     def create_training_runner(cls, cfg) -> TrainingRunner:
 
         # data_loader_factory = get_data_loader_factory(cfg)
-        # model_factory = get_model_factory(cfg.training.model)
         # optimizer_factory = get_optimizer_factory(cfg.training.optimizer)
 
         backend = BackendFactory.create(cfg.backend)
         # reporting_strategy = ReportingStrategyFactory.create_strategy(cfg)
 
         # trainer = Trainer(cfg, data_loader_factory, model_factory, backend, reporting_strategy)
-        trainer = Trainer(cfg, backend)
+        trainer = Trainer(cfg, AutoencoderFactory)
 
-        return TrainingRunner(cfg, trainer)
+        return TrainingRunner(cfg, trainer, backend)

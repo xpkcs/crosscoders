@@ -36,13 +36,10 @@ from crosscoders.utils import dataclass_to_dict, flatten_dict
 class Trainer:
 
     # def __init__(self, config, trainer, data_loader_factory, model_factory, backend, reporting_strategy):
-    def __init__(self, config, backend):
+    def __init__(self, config, autoencoder_factory):
 
         self.config = config
-        # self.trainer = trainer
-        # self.data_loader_factory = data_loader_factory
-        # self.model_factory = model_factory
-        self.backend = backend
+        self.autoencoder_factory = autoencoder_factory
         # self.reporting_strategy = reporting_strategy
 
         # self.train_loader = None
@@ -60,11 +57,11 @@ class Trainer:
         self.model = None
         self.optimizer = None
 
-    def initialize(self, model_config):
-        self.model = self.model_factory(**model_config)
+    def initialize(self, autoencoder_config):
+        self.autoencoder = self.autoencoder_factory(**autoencoder_config)
         self.optimizer = self.optimizer_factory(
             self.model.parameters(),
-            **model_config.get("optimizer_params", {})
+            **autoencoder_config.get("optimizer_params", {})
         )
         # self.backend = self.backend.initialize()
 
@@ -90,6 +87,40 @@ class Trainer:
     #     return self.model(batch)
 
 
+    def training_step(self, batch: Dict[str, torch.Tensor]) -> LossMetrics:
+
+        x     = self.cfg.runner.crosscoder.hps.x_scalar * batch[self.cfg.runner.input_name]
+        y     = self.cfg.runner.crosscoder.hps.y_scalar * batch[self.cfg.runner.output_name]
+        y_hat = self.model(x)
+
+        loss, metrics = self.model.loss(y, y_hat, lambda_s=self.scheduler['lambda_s'].get_lambda_s())
+        loss.backward()
+
+        total_grad_norm = torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1)
+
+        self.optimizer.step()
+        self.optimizer.zero_grad()
+
+        self.num_tokens_processed += batch[self.cfg.runner.input_name].shape[0]
+
+        report = (
+            {'training_iteration': self.num_tokens_processed} |
+            flatten_dict(dataclass_to_dict(metrics)) |
+            flatten_dict(
+                {
+                    'lr'      : self.scheduler['lr'].get_last_lr()[0],
+                    'lambda_s': self.scheduler['lambda_s'].get_lambda_s()
+                }
+            )
+        )
+
+        self.scheduler['lr'].step()
+        self.scheduler['lambda_s'].step()
+
+
+        return metrics, report
+
+
     # def train_batch(self, batch):
 
     #     ...
@@ -108,29 +139,29 @@ class Trainer:
     #     ...
 
 
-    def fit(self, dl, **kwargs):
+    # def fit(self, dl, **kwargs):
 
-        for epoch_idx in range(EPOCHS):
+    #     for epoch_idx in range(EPOCHS):
 
-            for batch_idx, batch in enumerate(dl):
+    #         for batch_idx, batch in enumerate(dl):
 
-                metrics, report = self.train_batch(batch)
+    #             metrics, report = self.train_batch(batch)
 
-                ray.train.report(report)
-
-
-            with tempfile.TemporaryDirectory() as temp_checkpoint_dir:
-                torch.save(
-                    self.model.state_dict(),
-                    os.path.join(temp_checkpoint_dir, 'model.pt')
-                )
-                ray.train.report(
-                    report,
-                    checkpoint=ray.train.Checkpoint.from_directory(temp_checkpoint_dir),
-                )
+    #             ray.train.report(report)
 
 
-        return report
+    #         with tempfile.TemporaryDirectory() as temp_checkpoint_dir:
+    #             torch.save(
+    #                 self.model.state_dict(),
+    #                 os.path.join(temp_checkpoint_dir, 'model.pt')
+    #             )
+    #             ray.train.report(
+    #                 report,
+    #                 checkpoint=ray.train.Checkpoint.from_directory(temp_checkpoint_dir),
+    #             )
+
+
+    #     return report
 
 
 
