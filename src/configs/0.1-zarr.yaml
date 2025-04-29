@@ -1,0 +1,54 @@
+defaults:
+  - base_config
+  - dataset: tiny-stories
+  - dataset/datasource: s3
+  - language_model: tiny-stories-33M
+  - batch: sequence
+  - runner: RayDataRunner
+  - runner/training_objective: prediction
+  - _self_
+
+
+
+# # mandatory
+dataset:
+#   name: ''
+  tag: ''
+
+  datasource:
+    which: ''
+    _target_: crosscoders.data.dataset.S3Datasource._load
+    key_prefix: data/tiny-stories-v1/language_model=tiny-stories-33M/slice=train/activations/
+
+# language_model:
+#   name: ''
+
+# runner:
+#   stage: tasks
+#   _target_: crosscoders.runners.data.ray.TokensToActivationsDataRunner
+#   batch_size: 1
+
+  # training_objective: prediction
+#     input_name: ''
+#     output_name: ''
+
+
+
+batch:
+  batch_size: 100000
+  # n_tokens: 100000
+
+activations:
+  types:
+    - ln2.normalized
+    - mlp_out
+
+runner:
+
+  stage: tasks
+
+  # batch_size: 32  # laptop, 5.9GB VRAM for 0.0-activations
+  # max_tokens: 1000
+
+
+  _target_: crosscoders.runners.data.ray.TokensToActivationsDataRunner

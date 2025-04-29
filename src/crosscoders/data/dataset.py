@@ -46,6 +46,22 @@ class Datasource:
         ...
 
 
+class LocalDatasource(Datasource):
+
+    @abstractmethod
+    def _load(path, **kwargs):
+
+        # keys = get_s3_keys(bucket_name=bucket_name, key_prefix=key_prefix)
+        # self.rng.shuffle(keys)    # does this matter for ray?
+
+        print(f'loading data from @ {path}')
+
+        return ray.data.read_parquet(
+            path,
+            ray_remote_args={'num_cpus': 1},
+            shuffle=ray.data.FileShuffleConfig(seed=CONFIG.globals.seed)
+        )
+
 class S3Datasource(Datasource):
 
     @abstractmethod
@@ -80,13 +96,14 @@ class HuggingFaceDatasource(Datasource):
 
 class Dataset:
 
-    def __init__(self, cfg: DatasetConfig):
+    def __init__(self, cfg: DatasetConfig, which: Literal['tokens', 'activations'] = 'tokens'):
 
         self.cfg: DatasetConfig = cfg
+        self.which = which
         self._dataset = None
 
 
-    def _load(self, which: Literal['tokens', 'activations'] = 'tokens') -> ray.data.Dataset:
+    def _load(self) -> ray.data.Dataset:
 
         # ds = self.cfg.datasource
         ds = hydra.utils.call(self.cfg.datasource)
@@ -95,7 +112,7 @@ class Dataset:
             ds = ds.limit(CONFIG.batch.n_records)
 
 
-        match which:
+        match self.which:
             case 'tokens':
                 ds = ds.map_batches(
                     TokenToActivations,

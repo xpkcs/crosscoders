@@ -11,8 +11,15 @@ from omegaconf import MISSING
 @dataclass
 class DatasourceConfig:
 
-    which: str = MISSING
+    # which: str = MISSING
     _target_: str = MISSING
+
+
+@dataclass
+class LocalDatasourceConfig(DatasourceConfig):
+
+    _target_: str = 'crosscoders.data.dataset.LocalDatasource._load'
+    path: str = '${paths._Paths__local_prefix}/${paths.activations_dir}'
 
 
 @dataclass

@@ -10,7 +10,7 @@ import numpy as np
 from rich import print as printr
 
 from crosscoders.dataclasses.dataset import TinyStoriesDatasetConfig
-from crosscoders.dataclasses.datasource import HuggingFaceDatasourceConfig, S3DatasourceConfig
+from crosscoders.dataclasses.datasource import HuggingFaceDatasourceConfig, LocalDatasourceConfig, S3DatasourceConfig
 from crosscoders.dataclasses.language_model import TinyStories33MLanguageModelConfig
 
 
@@ -75,8 +75,9 @@ cs.store(group='language_model', name='tiny-stories-33M', node=TinyStories33MLan
 cs.store(group='dataset', name='tiny-stories', node=TinyStoriesDatasetConfig)
 
 
-cs.store(group='dataset/datasource', name='hf', node=HuggingFaceDatasourceConfig(which='tokens'))
-cs.store(group='dataset/datasource', name='s3', node=S3DatasourceConfig(which='activations'))
+cs.store(group='dataset/datasource', name='local', node=LocalDatasourceConfig)
+cs.store(group='dataset/datasource', name='hf', node=HuggingFaceDatasourceConfig)
+cs.store(group='dataset/datasource', name='s3', node=S3DatasourceConfig)
 
 
 
