@@ -86,8 +86,8 @@ class TrainRunner(Runner):
     def __init__(self, cfg: DictConfig):
 
         super().__init__(cfg)
-        self.strategy = instantiate(cfg.strategy)
-        self.fit_loop = instantiate(cfg.fit_loop)
+        self.strategy = instantiate(cfg.runner.strategy, cfg)
+        self.fit_loop = instantiate(cfg.runner.fit_loop)
 
     # def _pre_run(self) -> None:
     #     self.model_factory = None
@@ -103,5 +103,4 @@ class TrainRunner(Runner):
             # optimizer_factory=self.optimizer_factory,
             # scheduler_factory=self.scheduler_factory,
             # loss_fn=self.loss_fn,
-            cfg=self.cfg,
         )

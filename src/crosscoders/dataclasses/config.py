@@ -58,12 +58,6 @@ class Globals:
 
     #     self.dtype = getattr(torch, self.dtype)
 
-
-@dataclass
-class FitLoopConfig:
-    _target_: str = MISSING
-
-
 @dataclass
 class Config:
 

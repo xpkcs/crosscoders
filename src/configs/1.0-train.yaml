@@ -1,7 +1,28 @@
-dataset:
-  _target_: 'crosscoders.data.dataset.ActivationsDataset'
+defaults:
+  - base_config
+  - dataset: tiny-stories
+  - dataset/datasource: hf
+  - language_model: tiny-stories-33M
+  - batch: token
+  - runner: train.default
+  - runner/fit_loop: default
+  - runner/training_objective: prediction
+  - _self_
+
+
+
+globals:
+  local: true
+
+batch:
+  batch_size: 5
+  # n_tokens: 100000
+  # n_records: 10
+
 
 runner:
-  _target_: 'crosscoders.runners.train.TrainRunner'
+  strategy:
+    _target_: crosscoders.strategies.train.DefaultTrainStrategy
 
-  stage: train
+  # batch_size: 32  # laptop, 5.9GB VRAM for 0.0-activations
+  # max_tokens: 1000

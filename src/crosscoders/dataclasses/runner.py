@@ -164,6 +164,29 @@ class DataRunnerConfig(RunnerConfig):
     stage: str = 'data'
     strategy: DataStrategyConfig = field(default_factory=DataStrategyConfig)
 
+
+@dataclass
+class TrainStrategyConfig:
+
+    # type: str = MISSING
+    _target_: str = MISSING
+
+@dataclass
+class FitLoopConfig:
+
+    # type: str = MISSING
+    _target_: str = MISSING
+
+
+@dataclass
+class TrainRunnerConfig(RunnerConfig):
+    # _target_: str = 'crosscoders.runner.DataRunner'
+    stage: str = 'train'
+    strategy: TrainStrategyConfig = field(default_factory=TrainStrategyConfig)
+    fit_loop: FitLoopConfig = field(default_factory=FitLoopConfig)
+
+    training_objective: TrainingObjectiveConfig = field(default_factory=TrainingObjectiveConfig)
+
 # @dataclass
 # class RunnerConfig:
 
@@ -258,37 +281,37 @@ class DataRunnerConfig(RunnerConfig):
 #     #     self.dataset.slice = 'train'
 
 
-@dataclass
-class TrainRunnerConfig(RunnerConfig):
+# @dataclass
+# class TrainRunnerConfig(RunnerConfig):
 
-    stage: str = 'train'
+#     stage: str = 'train'
 
-    # batch_size : int = 25000
+#     # batch_size : int = 25000
 
-    # dataset: ActivationsDatasetConfig = field(default_factory=ActivationsDatasetConfig)
-
-
-    optimizer  : OptimizerConfig      = field(default_factory=OptimizerConfig)
-    autoencoder: BaselineModuleConfig = field(default_factory=BaselineModuleConfig)
+#     # dataset: ActivationsDatasetConfig = field(default_factory=ActivationsDatasetConfig)
 
 
-    # @classmethod
-    # def from_config(cls, cfg: Optional[RunnerConfig] = None, **kwargs: dict) -> None:
-
-    #     cfg = super().from_config(cfg, kwargs)
-
-    #     for k in ('dataset', 'optimizer')
-    #     if 'dataset' in cfg:
-    #         cfg['dataset'] = TokensDatasetConfig(**cfg['dataset'])
-    #     if 'language_model' in cfg:
-    #         cfg['language_model'] = LanguageModelConfig(**cfg['language_model'])
+#     optimizer  : OptimizerConfig      = field(default_factory=OptimizerConfig)
+#     autoencoder: BaselineModuleConfig = field(default_factory=BaselineModuleConfig)
 
 
+#     # @classmethod
+#     # def from_config(cls, cfg: Optional[RunnerConfig] = None, **kwargs: dict) -> None:
 
-@dataclass
-class EvalRunnerConfig(DataRunnerConfig, TrainRunnerConfig):
+#     #     cfg = super().from_config(cfg, kwargs)
 
-    stage: str = 'eval'
+#     #     for k in ('dataset', 'optimizer')
+#     #     if 'dataset' in cfg:
+#     #         cfg['dataset'] = TokensDatasetConfig(**cfg['dataset'])
+#     #     if 'language_model' in cfg:
+#     #         cfg['language_model'] = LanguageModelConfig(**cfg['language_model'])
 
-    # batch_size : int = 25000
+
+
+# @dataclass
+# class EvalRunnerConfig(DataRunnerConfig, TrainRunnerConfig):
+
+#     stage: str = 'eval'
+
+#     # batch_size : int = 25000
 

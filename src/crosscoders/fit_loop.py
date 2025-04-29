@@ -4,13 +4,13 @@ from typing import Protocol
 
 class FitLoop(ABC):
 
-    def __init__(self, model_factory, optimizer_factory, loss_fn=None, train_dl=None, val_dl=None, num_epochs=1):
-        self.model = model_factory
-        self.optimizer = optimizer_factory
-        self.loss_fn = loss_fn
-        self.train_dl = train_dl
-        self.val_dl = val_dl
-        self.num_epochs = num_epochs
+    def __init__(self, model_factory=None, optimizer_factory=None, loss_fn=None, train_dl=None, val_dl=None, num_epochs=1):
+        # self.model = model_factory
+        # self.optimizer = optimizer_factory
+        # self.loss_fn = loss_fn
+        # self.train_dl = train_dl
+        # self.val_dl = val_dl
+        # self.num_epochs = num_epochs
 
         self._initialize()
 
@@ -65,7 +65,9 @@ class FitLoop(ABC):
     def _on_epoch_end(self): pass
     def _on_end(self): pass
 
-# class DefaultFitLoop:
+class DefaultFitLoop(FitLoop):
+    def training_step(self):
+        pass
 
 
 
