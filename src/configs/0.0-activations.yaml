@@ -3,45 +3,24 @@ defaults:
   - dataset: tiny-stories
   - dataset/datasource: hf
   - language_model: tiny-stories-33M
-  - batch: sequence
-  - runner: 0.0-activations
-  - runner/training_objective: prediction
+  - batch: token
+  - runner: data
+  # - runner/training_objective: prediction
   - _self_
 
 
 
-# # mandatory
-# dataset:
-#   name: ''
-#   tag: ''
 
-#   datasource:
-#     which: ''
-#     _target_: crosscoders.data.dataset.HuggingFaceDatasource._load
-
-# language_model:
-#   name: ''
-
-# runner:
-#   stage: ''
-#   _target_: crosscoders.runners.data.ray.TokensToActivationsDataRunner
-#   batch_size: 1
-
-#   training_objective:
-#     input_name: ''
-#     output_name: ''
-
-
-dataset:
-  tag: tiny-stories-33M-1B
-
+globals:
+  local: true
 
 batch:
-  batch_size: 150
+  batch_size: 5
   # n_tokens: 100000
+  n_records: 10
 
-
-# runner:
+runner:
+  strategy:
+    _target_: crosscoders.strategies.data.TokensToActivationsStrategy
 
   # batch_size: 32  # laptop, 5.9GB VRAM for 0.0-activations
-  # max_tokens: 1000

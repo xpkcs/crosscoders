@@ -11,7 +11,7 @@ from crosscoders.config import print_config, get_config, set_config
 from crosscoders.utils import check_required_env_vars;  check_required_env_vars()
 # from crosscoders import abc, autoencoders, dataclasses
 
-
+from crosscoders.runner import *
 
 # print_config(get_config(), resolve=True)
 

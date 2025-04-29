@@ -91,7 +91,8 @@ class Dataset:
         # ds = self.cfg.datasource
         ds = hydra.utils.call(self.cfg.datasource)
 
-        # ds = ds.limit(CONFIG.batch.n_records)
+        if CONFIG.batch.n_records:
+            ds = ds.limit(CONFIG.batch.n_records)
 
 
         match which:
@@ -102,7 +103,7 @@ class Dataset:
                     concurrency=1,
                     num_gpus=1,
                     num_cpus=1,
-                    memory=10*1024*1024*1024,
+                    # memory=10*1024*1024*1024,
                     zero_copy_batch=True
                 )
 

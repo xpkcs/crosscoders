@@ -43,7 +43,7 @@ OmegaConf.register_new_resolver('range', lambda n: list(range(int(n))), replace=
 # ------------------------- structured configs ------------------------- #
 
 # from crosscoders.dataclasses.args import ArgsConfig
-from crosscoders.dataclasses.config import Config
+from crosscoders.dataclasses.config import Config, FitLoopConfig
 from crosscoders.dataclasses.runner import BatchConfig, DataRunnerConfig, PredictionTrainingObjective, RayBackendConfig, ReconstructionTrainingObjective, RunnerConfig, TokensToActivationsStrategyConfig, TrainRunnerConfig, EvalRunnerConfig
 from crosscoders.dataclasses.autoencoders.baseline import BaselineAutoencoderConfig
 from crosscoders.dataclasses.autoencoders.jumprelu import JumpReLUAutoencoderConfig
@@ -53,20 +53,22 @@ cs = ConfigStore.instance()
 
 cs.store(name='base_config', node=Config)
 cs.store(name='base_runner', node=RunnerConfig)
-cs.store(group='runner', name='0.0-activations', node=DataRunnerConfig(backend=RayBackendConfig(), data_strategy=TokensToActivationsStrategyConfig()))
-cs.store(group='runner', name='1.0-train', node=TrainRunnerConfig(backend=RayBackendConfig()))
-# cs.store(group='runner', name='data', node=DataRunnerConfig)
-# cs.store(group='runner', name='train', node=TrainRunnerConfig)
-# cs.store(group='runner', name='eval', node=EvalRunnerConfig)
-cs.store(group='crosscoder', name='baseline', node=BaselineAutoencoderConfig)
-cs.store(group='crosscoder', name='jumprelu', node=JumpReLUAutoencoderConfig)
-# cs.store(name='args', node=ArgsConfig)
+
+cs.store(group='runner', name='data', node=DataRunnerConfig)
+# cs.store(group='runner', name='0.0-activations', node=DataRunnerConfig(backend=RayBackendConfig(), data_strategy=TokensToActivationsStrategyConfig()))
+# cs.store(group='runner', name='1.0-train', node=TrainRunnerConfig(backend=RayBackendConfig()))
+# # cs.store(group='runner', name='data', node=DataRunnerConfig)
+# # cs.store(group='runner', name='train', node=TrainRunnerConfig)
+# # cs.store(group='runner', name='eval', node=EvalRunnerConfig)
+# cs.store(group='crosscoder', name='baseline', node=BaselineAutoencoderConfig)
+# cs.store(group='crosscoder', name='jumprelu', node=JumpReLUAutoencoderConfig)
+# # cs.store(name='args', node=ArgsConfig)
 
 
-# cs.store(group='runner', name='RayDataRunner', node=RayDataRunnerConfig)
-# cs.store(group='runner', name='SparkDataRunner', node=SparkDataRunnerConfig)
-cs.store(group='runner/training_objective', name='reconstruction', node=ReconstructionTrainingObjective)
-cs.store(group='runner/training_objective', name='prediction', node=PredictionTrainingObjective)
+# # cs.store(group='runner', name='RayDataRunner', node=RayDataRunnerConfig)
+# # cs.store(group='runner', name='SparkDataRunner', node=SparkDataRunnerConfig)
+# cs.store(group='runner/training_objective', name='reconstruction', node=ReconstructionTrainingObjective)
+# cs.store(group='runner/training_objective', name='prediction', node=PredictionTrainingObjective)
 
 cs.store(group='language_model', name='tiny-stories-33M', node=TinyStories33MLanguageModelConfig)
 cs.store(group='dataset', name='tiny-stories', node=TinyStoriesDatasetConfig)
@@ -83,6 +85,10 @@ cs.store(group='batch', name='sequence', node=BatchConfig(type='sequence'))
 
 
 
+# cs.store(group='strategy', name='default', node=DefaultStrategyConfig)
+# cs.store(group='strategy', name='clt', node=DefaultStrategyConfig('crosscoders.strats.CLTDistributedStrategy'))
+cs.store(group='fit_loop', name='default', node=FitLoopConfig('crosscoders.fit_loop.DefaultFitLoop'))
+# cs.store(group='fit_loop', name='distributed', node=FitLoopConfig('crosscoders.fit_loop.DistributedFitLoop'))
 
 
 # ------------------------- globally available var ------------------------- #

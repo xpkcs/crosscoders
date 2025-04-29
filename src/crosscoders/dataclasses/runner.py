@@ -109,7 +109,8 @@ class BatchConfig:
     n_seqs: int = '${ceil:${eval:"${.n_tokens} / ${.max_seq_len}"}}'
 
     n_batches: int = '${ceil:${eval:"${.n_seqs} / ${.batch_size}"}}'
-    n_records: int = '${ifelse:${eq:${.type}, "token"}, ${.n_tokens}, ${.n_seqs}}'
+    # n_records: int = '${ifelse:${eq:${.type}, "token"}, ${.n_tokens}, ${.n_seqs}}'
+    n_records: int | None = None
 
 
 
@@ -133,11 +134,12 @@ class SparkBackendConfig(BackendConfig):
 @dataclass
 class DataStrategyConfig:
 
-    type: str = MISSING
+    # type: str = MISSING
+    _target_: str = MISSING
     activations_path: str = '${paths._Paths__prefix}/${paths.activations_dir}'
 
-    def __post_init__(self):
-        self.type = self.type.lower()
+    # def __post_init__(self):
+    #     self.type = self.type.lower()
 
 @dataclass
 class TokensToActivationsStrategyConfig(DataStrategyConfig):
@@ -153,62 +155,73 @@ class TokensToActivationsStrategyConfig(DataStrategyConfig):
 
 @dataclass
 class RunnerConfig:
-
-    stage: str = MISSING
-
+    pass
     # _target_: str = MISSING
-
-    # batch_size    : int = MISSING
-    # n_tokens    : int = 1000000000
-    # n_tokens_seq: int = 512 # max seq len
-
-    # batch: BatchConfig = field(default_factory=BatchConfig)
-
-    training_objective: TrainingObjectiveConfig = field(default_factory=TrainingObjectiveConfig)
-
-    # job: JOB_TYPE_ENUM = JOB_TYPE_ENUM.false
-    # ray_job: bool = '${globals.ray_job}'
-    # glue_job: bool = '${globals.glue_job}'
-
-
-    # dims: DimensionsConfig = field(default_factory=DimensionsConfig)
-    # dataset: DatasetConfig = field(default_factory=DatasetConfig)
-    # dataset: DatasetConfig = MISSING
-    # dataset: DatasetConfig = '${dataset}'
-
-    # language_model: LanguageModelConfig = field(default_factory=LanguageModelConfig)
-
-    backend: BackendConfig = field(default_factory=BackendConfig)
-
-
-
-    @classmethod
-    def from_config(cls, cfg: Optional[DictConfig] = None, **kwargs: dict) -> None:
-
-        if cfg is None:
-            cfg = {}
-        elif isinstance(cfg, dict):
-            cfg = cfg
-        elif isinstance(cfg, DictConfig):
-            cfg = OmegaConf.to_container(cfg, resolve=True)
-        else:
-            cfg = OmegaConf.to_container(OmegaConf.structured(cfg), resolve=True)
-
-
-        return cfg | kwargs
-
-
-    # def __post_init__(self):
-
-    #     # if issubclass(type(self.dataset), DatasetConfig):
-    #     self.dataset.slice = self.stage
-
 
 @dataclass
 class DataRunnerConfig(RunnerConfig):
-
+    # _target_: str = 'crosscoders.runner.DataRunner'
     stage: str = 'data'
-    data_strategy: DataStrategyConfig = field(default_factory=DataStrategyConfig)
+    strategy: DataStrategyConfig = field(default_factory=DataStrategyConfig)
+
+# @dataclass
+# class RunnerConfig:
+
+#     stage: str = MISSING
+
+#     # _target_: str = MISSING
+
+#     # batch_size    : int = MISSING
+#     # n_tokens    : int = 1000000000
+#     # n_tokens_seq: int = 512 # max seq len
+
+#     # batch: BatchConfig = field(default_factory=BatchConfig)
+
+#     training_objective: TrainingObjectiveConfig = field(default_factory=TrainingObjectiveConfig)
+
+#     # job: JOB_TYPE_ENUM = JOB_TYPE_ENUM.false
+#     # ray_job: bool = '${globals.ray_job}'
+#     # glue_job: bool = '${globals.glue_job}'
+
+
+#     # dims: DimensionsConfig = field(default_factory=DimensionsConfig)
+#     # dataset: DatasetConfig = field(default_factory=DatasetConfig)
+#     # dataset: DatasetConfig = MISSING
+#     # dataset: DatasetConfig = '${dataset}'
+
+#     # language_model: LanguageModelConfig = field(default_factory=LanguageModelConfig)
+
+#     backend: BackendConfig = field(default_factory=BackendConfig)
+
+
+
+#     @classmethod
+#     def from_config(cls, cfg: Optional[DictConfig] = None, **kwargs: dict) -> None:
+
+#         if cfg is None:
+#             cfg = {}
+#         elif isinstance(cfg, dict):
+#             cfg = cfg
+#         elif isinstance(cfg, DictConfig):
+#             cfg = OmegaConf.to_container(cfg, resolve=True)
+#         else:
+#             cfg = OmegaConf.to_container(OmegaConf.structured(cfg), resolve=True)
+
+
+#         return cfg | kwargs
+
+
+#     # def __post_init__(self):
+
+#     #     # if issubclass(type(self.dataset), DatasetConfig):
+#     #     self.dataset.slice = self.stage
+
+
+# @dataclass
+# class DataRunnerConfig(RunnerConfig):
+
+#     stage: str = 'data'
+#     data_strategy: DataStrategyConfig = field(default_factory=DataStrategyConfig)
 
 # @dataclass
 # class RayDataRunnerConfig(DataRunnerConfig):

@@ -1,19 +1,20 @@
-
-
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any
 
 from omegaconf import MISSING
 import torch
 
 from crosscoders.dataclasses.language_model import LanguageModelConfig
 from crosscoders.dataclasses.runner import BatchConfig, DatasetConfig, RunnerConfig
-from crosscoders.dataclasses.runner import ActivationsConfig, DatasetConfig, RunnerConfig
+from crosscoders.dataclasses.runner import (
+    ActivationsConfig,
+    DatasetConfig,
+    RunnerConfig,
+)
 
 
-__all__ = ['Paths', 'Config']
-
-
+__all__ = ["Paths", "Config"]
 
 
 @dataclass
@@ -25,17 +26,20 @@ class Paths:
     # PROJECT_ROOT_DIR: str =
 
     # local_prefix: str = '${hydra:runtime.cwd}'
-    __local_prefix : str = Path(__file__).parents[2]
-    __s3_prefix    : str = 's3://${..globals.s3_bucket}'
-    __prefix       : str = '${ifelse:${..globals.local}, ${._Paths__local_prefix}, ${._Paths__s3_prefix}}'
+    __local_prefix: str = Path(__file__).parents[3]
+    __s3_prefix: str = "s3://${..globals.s3_bucket}"
+    __prefix: str = (
+        "${ifelse:${..globals.local}, ${._Paths__local_prefix}, ${._Paths__s3_prefix}}"
+    )
 
     # config_path: str = MISSING
     # data_dir       : str = '${._Paths__prefix}/data'
-    data_dir       : str = 'data'
-    dataset_dir    : str = '${.data_dir}/${..dataset.name}/language_model=${..language_model.name}/slice=${..dataset.slice}/tag=${..dataset.tag}'
-    activations_dir: str = '${.dataset_dir}/activations/'
-    zarr_dir       : str = '${.dataset_dir}/zarr/'
-
+    data_dir: str = "data"
+    dataset_dir: str = (
+        "${.data_dir}/${..dataset.name}/language_model=${..language_model.name}/slice=${..dataset.slice}/tag=${..dataset.tag}"
+    )
+    activations_dir: str = "${.dataset_dir}/activations/"
+    zarr_dir: str = "${.dataset_dir}/zarr/"
 
 
 @dataclass
@@ -43,18 +47,21 @@ class Globals:
 
     # ray_job  : bool = False
 
-    local    : bool = False
-    s3_bucket: str = 'crosscoders'
+    local: bool = False
+    s3_bucket: str = "crosscoders"
 
-    seed  : int = 314159
-    device: str = 'cuda'
-    dtype : str = 'float32'
-
+    seed: int = 314159
+    device: str = "cuda"
+    dtype: str = "float32"
 
     # def __post_init__(self):
 
     #     self.dtype = getattr(torch, self.dtype)
 
+
+@dataclass
+class FitLoopConfig:
+    _target_: str = MISSING
 
 
 @dataclass
@@ -74,5 +81,10 @@ class Config:
 
     runner: RunnerConfig = field(default_factory=RunnerConfig)
 
-
-
+    # model: ModelConfig = MISSING
+    # optimizer: OptimizerConfig = MISSING
+    # loss: LossConfig = MISSING
+    # scheduler: Optional[SchedulerConfig] = None
+    # strategy: Any = MISSING  # Can be either PyTorchStrategyConfig or RayStrategyConfig
+    # fit_loop: FitLoopConfig = MISSING
+    # training: TrainingParams = field(default_factory=TrainingParams)

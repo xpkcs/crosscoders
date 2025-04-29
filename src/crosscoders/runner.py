@@ -48,28 +48,28 @@ class Runner(ABC):
         pass
 
 
-class DataProcessingRunner(Runner):
+class DataRunner(Runner):
     """Runner for data processing with swappable underlying backend framework (e.g., Ray, Spark) and processing strategy."""
 
-    def __init__(self, cfg, backend, strategy):
+    def __init__(self, cfg):
 
         super().__init__(cfg)
-        self.backend = backend
-        self.strategy = strategy
+        # self.backend = backend
+        self.strategy = instantiate(cfg.runner.strategy)
 
-    def _pre_run(self) -> None:
+    # def _pre_run(self) -> None:
 
-        self.logger.info(
-            f"Initializing processing backend {self.backend.__class__.__name__}"
-        )
-        self.backend.initialize()
+        # self.logger.info(
+        #     f"Initializing processing backend {self.backend.__class__.__name__}"
+        # )
+        # self.backend.initialize()
 
     def _run(self) -> Any:
         """Process data"""
 
-        self.logger.info(
-            f"Processing data with backend {self.backend.__class__.__name__}"
-        )
+        # self.logger.info(
+        #     f"Processing data with backend {self.backend.__class__.__name__}"
+        # )
         self.logger.info(f"Executing strategy {self.strategy.__class__.__name__}")
 
         return self.strategy.execute()
@@ -78,7 +78,7 @@ class DataProcessingRunner(Runner):
         """Clean up resources"""
 
         self.logger.info("Shutting down processing backend")
-        self.backend.shutdown()
+        # self.backend.shutdown()
 
 
 class TrainRunner(Runner):
