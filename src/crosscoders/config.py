@@ -81,7 +81,7 @@ cs.store(group='dataset/datasource', name='s3', node=S3DatasourceConfig)
 
 
 
-cs.store(group='batch', name='token', node=BatchConfig(type='token', max_seq_len=1))
+cs.store(group='batch', name='token', node=BatchConfig(type='token'))
 cs.store(group='batch', name='sequence', node=BatchConfig(type='sequence'))
 
 

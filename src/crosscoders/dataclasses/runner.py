@@ -103,7 +103,8 @@ class BatchConfig:
     type       : str = MISSING
     batch_size : int = MISSING
 
-    max_seq_len: int = '${ifelse:${eq:${.type}, "token"}, 1, ${language_model.n_context}}'
+    # max_seq_len: int = '${ifelse:${eq:${.type}, "token"}, 1, ${language_model.n_context}}'
+    max_seq_len: int = '${language_model.n_context}'
 
     n_tokens   : int = 1000000000 # 1B
     n_seqs: int = '${ceil:${eval:"${.n_tokens} / ${.max_seq_len}"}}'

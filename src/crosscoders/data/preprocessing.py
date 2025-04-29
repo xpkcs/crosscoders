@@ -29,10 +29,10 @@ class TokenToActivations:
 
         torch.set_grad_enabled(False)
 
-        # device = torch.get_default_device()
-        # torch.set_default_device('cpu')
+        device = torch.get_default_device()
+        torch.set_default_device('cpu')
         self.model = HookedTransformer.from_pretrained(CONFIG.language_model.name, device=CONFIG.globals.device).eval()
-        # torch.set_default_device(device)
+        torch.set_default_device(device)
 
         self.hooks = [
             (
@@ -68,10 +68,11 @@ class TokenToActivations:
         self.max_seq_len = min(tokens.shape[1], CONFIG.batch.max_seq_len)
 
         tokens = tokens[:,:self.max_seq_len]
+        tokens.to(torch.int32)
 
 
-        mask = tokens != self.bos_token
-        mask[:, 0] = True
+        # mask = tokens != self.bos_token
+        # mask[:, 0] = True
 
 
         # mask = (tokens != self.bos_token)
@@ -107,10 +108,9 @@ class TokenToActivations:
 
         batch_out = {}
         for k, v in self.batch_out.items():
-            # batch_out[k] = v[mask].cpu().numpy()  # if records as seqs
-            batch_out[k] = v.cpu().numpy()
+            batch_out[k] = v[mask].cpu().numpy()  # if records as seqs
+            # batch_out[k] = v.cpu().numpy()
         self.batch_out = {}
-
 
         return batch_out
 
