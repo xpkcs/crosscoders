@@ -108,8 +108,8 @@ class Dataset:
         # ds = self.cfg.datasource
         ds = hydra.utils.call(self.cfg.datasource)
 
-        if CONFIG.batch.n_records:
-            ds = ds.limit(CONFIG.batch.n_records)
+        # if CONFIG.batch.n_records:
+        #     ds = ds.limit(CONFIG.batch.n_records)
 
 
         match self.which:
